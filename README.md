@@ -65,6 +65,11 @@ TODO: Possibility to create a profil to have some list of package.
 
 ### Initial Project Proposal (28-Jan)
 
+TODO
+* Upload document with what is the project about
+* create the group on Moodle with names, id...
+
+
 ### Detailed Project Proposal (5-Feb week)
 
 ### Research and Technology Review (19-Feb week)
