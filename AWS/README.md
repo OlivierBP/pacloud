@@ -149,6 +149,8 @@ Version tableau json avec les versions
 * **OLIVIER**
     * Create the squeleton of the architecture
 * **JULIETTE**
+    * Create a micro-service to search for packages
+    * Create a micro-service to install packages
 * **PIERRE**
     * Create client package manager architecture
     * Manage user configuration
@@ -160,6 +162,10 @@ Version tableau json avec les versions
     * Implement DynamoDB
     * Create the CRON TIMER to refresh the packages database and compile the needed
 * **JULIETTE**
+    * Create a micro-service to downgrade a package
+    * Create a micro-service to upgrade a package
+    * Create a micro-service to upgrade all packages
+    * Create a micro-service to remove a package
 * **PIERRE**
     * Link package manager interface to microservices
     * Optimize interface and local DB management
@@ -169,6 +175,7 @@ Version tableau json avec les versions
     * Implement the auto-scaling of the EC2 instances
     * Adjust the Lambda function code, API Gateway and DynamoDB tables with the new requirements of the client
 * **JULIETTE**
+    * Create a web interface
 * **PIERRE**
     * Add support for other package managers
     * Add functionnalities
