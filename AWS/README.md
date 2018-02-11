@@ -150,17 +150,19 @@ Version tableau json avec les versions
     * Create the squeleton of the architecture
 * **JULIETTE**
 * **PIERRE**
-
-
+    * Create client package manager architecture
+    * Manage user configuration
+    * Create package manager command line interface
 
 ### SPRINT 2
 * **OLIVIER** 
     * Implement the Lambda functions
     * Implement DynamoDB
-    * Create the CRON TIMER to refresh the packages database et compile the needed
+    * Create the CRON TIMER to refresh the packages database and compile the needed
 * **JULIETTE**
 * **PIERRE**
-
+    * Link package manager interface to microservices
+    * Optimize interface and local DB management
 
 ### SPRINT 3
 * **OLIVIER** 
@@ -168,10 +170,8 @@ Version tableau json avec les versions
     * Adjust the Lambda function code, API Gateway and DynamoDB tables with the new requirements of the client
 * **JULIETTE**
 * **PIERRE**
-
-
-
-
+    * Add support for other package managers
+    * Add functionnalities
 
 ### ROSETTA
 
