@@ -153,7 +153,7 @@ Version tableau json avec les versions
     * Create a micro-service to install packages
 * **PIERRE**
     * Create client package manager architecture
-    * Manage user configuration
+    * Create local database and a microservice to update it
     * Create package manager command line interface
 
 ### SPRINT 2
@@ -168,7 +168,8 @@ Version tableau json avec les versions
     * Create a micro-service to remove a package
 * **PIERRE**
     * Link package manager interface to microservices
-    * Optimize interface and local DB management
+    * Manage user configuration
+    * Optimize interface
 
 ### SPRINT 3
 * **OLIVIER** 
