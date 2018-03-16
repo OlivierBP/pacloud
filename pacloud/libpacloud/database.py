@@ -3,8 +3,6 @@
 import os
 import json
 
-from pprint import pprint
-
 def list_packages():
     packages = os.listdir('/var/lib/pacloud/db/')
     return packages
