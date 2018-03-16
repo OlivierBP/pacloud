@@ -1,0 +1,18 @@
+# Pacloud project
+# https://github.com/OlivierBP/Pacloud
+# Created 2018-03-18 by BAL-PETRE Olivier
+# License MIT 
+
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+
+
+Mappings:
+
+
+
+Resources:
+
+
+
