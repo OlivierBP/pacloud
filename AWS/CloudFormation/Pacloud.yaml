@@ -7,7 +7,8 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: >-
   AWS CloudFormation template for the Pacloud project
 
-# Parameters:
+# Parameters: 
+
 
 
 # Mappings:
@@ -292,6 +293,40 @@ Resources:
       MethodResponses:
         - StatusCode: 200
 
+
+  ################## SQS ##################
+  QueueToCompile: 
+    Type: "AWS::SQS::Queue"
+    Properties: 
+      QueueName: "QueueToCompile"
+      MaximumMessageSize: 1024
+      MessageRetentionPeriod: 345600
+      VisibilityTimeout: 7200
+      RedrivePolicy: 
+        deadLetterTargetArn: 
+          Fn::GetAtt: 
+            - "DeadLetterQueueToCompile"
+            - "Arn"
+        maxReceiveCount: 2
+
+  # If a package tried to be compiled more than 2 times, the request is put in this queue
+  DeadLetterQueueToCompile: 
+    Type: "AWS::SQS::Queue"
+    Properties: 
+      QueueName: "DeadLetterQueueToCompile"
+      MaximumMessageSize: 262144
+      MessageRetentionPeriod: 1209600
+
+
+
+
+
+
+
+
+
+
+
    
 Outputs:
   ApiRootUrl:
@@ -323,12 +358,3 @@ Outputs:
         - !Ref 'AWS::Region'
         - .amazonaws.com
         - /LATEST/sync
-
-
-
-
-
-
-
-
-
