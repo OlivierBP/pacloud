@@ -8,7 +8,11 @@ Description: >-
   AWS CloudFormation template for the Pacloud project
 
 # Parameters: 
-
+Parameters: 
+  AlarmEmail: 
+    Default: nobody@amazon.com
+    Description: Email address to notify if operational problems arise
+    Type: String
 
 
 # Mappings:
@@ -322,8 +326,48 @@ Resources:
 
 
 
+  ################## SNS ##################
+  AlarmTopic: 
+    Type: "AWS::SNS::Topic"
+    Properties: 
+      Subscription: 
+        - 
+          Endpoint: !Ref "AlarmEmail"
+          Protocol: "email"
 
 
+  ################## S3 ##################
+  # S3 bucket to store the packages
+  # Alarm with SNS if all replicas are lost for an object
+  # Encrypted with Amazon S3-managed keys SSE-S3
+  S3BucketPacloud:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicRead
+      LoggingConfiguration:
+        DestinationBucketName: !Ref 'S3BucketPacloudLogging'
+        LogFilePrefix: logs
+      NotificationConfiguration:
+        TopicConfigurations:
+        - Topic: !Ref AlarmTopic
+          Event: s3:ReducedRedundancyLostObject
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+
+  # Encrypted with Amazon S3-managed keys SSE-S3
+  S3BucketPacloudLogging:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: LogDeliveryWrite
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+        
 
 
 
@@ -358,3 +402,14 @@ Outputs:
         - !Ref 'AWS::Region'
         - .amazonaws.com
         - /LATEST/sync
+
+  BucketStorage:
+    Value: !Ref 'S3BucketPacloud'
+    Description: Bucket to store the packages and any public data
+  BucketLogging:
+    Value: !Ref 'S3BucketPacloudLogging'
+    Description: Bucket to store the logging for Pacloud
+
+  AlarmEmail:
+    Value: !Ref AlarmEmail
+    Description: Email address to notify if operational problems arise
