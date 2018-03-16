@@ -1,0 +1,146 @@
+tmux attach -t 0
+tmux ls
+tmux detach
+
+
+# Put an object from the EC2 to S3
+[[http://boto3.readthedocs.io/en/latest/guide/quickstart.html#installation][boto3 doc]]
+dev-python/pip
+    #pip install aws-shell --user
+    pip install boto3 --user
+
+
+
+
+# Compile package without install
+emerge --buildpkgonly firefox
+
+# variable PKGDIR dans /etc/portage/make.conf pour stockage des packages compilés
+/usr/portage/packages
+
+
+
+# Need package sys-power/suspend
+https://wiki.gentoo.org/wiki/Suspend_and_hibernate#Suspend_to_disk
+/dev/xvda1
+
+# Create swapfile
+https://www.cyberciti.biz/faq/linux-add-a-swap-file-howto/
+dd if=/dev/zero of=/home/ec2-user/swapfile bs=1024 count=524288
+chown root:root /home/ec2-user/swapfile
+chmod 0600 /home/ec2-user/swapfile
+mkswap /home/ec2-user/swapfile
+mkswapon /home/ec2-user/swapfile
+
+blkid /dev/xvda1
+swap-offset /home/ec2-user/swapfile
+
+# Remove grub-static (legacy) and install grub
+emerge --depclean grub-static
+emerge grub
+
+# Dans le fichier de conf grub at /boot/grub/grub.conf
+#GRUB_CMDLINE_LINUX_DEFAULT="resume=UUID=<UUID_of_partition> resume_offset=<offset_of_swapfile>"
+GRUB_CMDLINE_LINUX_DEFAULT="resume=UUID=c54408e6-3ace-43... resume_offset=176128"
+
+# Need install sys-boot/grub
+grub-mkconfig -o /boot/grub/grub.cfg
+
+
+# Need sys-power/pm-utils
+# pm-suspend
+
+# Need sys-power/hibernate-script
+# hibernate
+
+# Changer la config kernel pour pouvoir hibernate
+https://wiki.gentoo.org/wiki/Kernel/Configuration#Configuration
+cd /usr/src/linux
+make menuconfig
+# Choose what you want
+# Power management options → <*>Power management support (CONFIG_PM) 
+# Power management options → <*>Software Suspend (CONFIG_SOFTWARE_SUSPEND) 
+https://en.wikipedia.org/wiki/Swsusp
+make
+
+# Pour vérifier que peut hibernate: doit avoir "disk"
+cat /sys/power/state
+# Pour plus de details
+cat /sys/power/disk
+
+# Recompiler le kernel pour plus de 1 core sur certaines instances ??
+
+
+
+
+
+# Installed packages
+* python
+* tmux
+* app-text/tree
+* app-misc/ranger
+
+
+
+
+
+
+# LAUNCH
+# ------------------------------
+Request type (tab): Request and maintain
+* AMI: Search for AMI => Pacloud_ubuntu_img_hibernate
+* Instance type: c3.large
+* Interruption behavior: hibernate
+* Security groups: Pacloud_workers
+* Key pair name: KeyPair_Server1
+* Instance tags: ...
+# ------------------------------
+
+
+# DEMO
+* Redshift high
+* Luminisity high
+# ------------------------------
+* Show the spot instance from the web interface (fleet + instance)
+  * Can't hibernate on On-demand instance
+  * Need the hibagent on the machine to interact with the spot manager
+  * Now on Ubuntu => to do on Gentoo => easy
+
+* Connect ssh to the spot instance
+  * Connect to the tmux session
+  * Show the script
+  * Launch the script
+  * Look and remember the random number
+  * Hibernate
+  * Close terminal
+
+* Show the instance stopping/stopped
+  * wait (~5 min)
+    * Can't restart myself the instance, the manager is the only one able to do it
+    * Regularly, the spot manager look at the instances in the fleet:
+      * If price is too high, hibernate the instance
+      * If the price is correct, start it
+  * Show the instance restarting
+  * Copy the NEW IP address => real stop
+
+* Connect ssh to the spot instance with the NEW IP
+  * Show that tmux still have a existing session
+  * tmux attach -t 0
+  * Show that the script continue to print with the same number
+=> It works
+# ------------------------------
+
+# Questions
+Est ce qu'on doit montrer l'avancement du projet au prof ? Comment ?
+
+[[https://aws.amazon.com/about-aws/whats-new/2017/11/amazon-ec2-spot-lets-you-pause-and-resume-your-workloads/][Amazon EC2 Spot Lets you Pause and Resume Your Workloads]]
+
+[[https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-interruptions.html#interruption-behavior][Spot hibernation doc]]
+
+[[https://aws.amazon.com/ec2/spot/pricing/][Spot pricing]]
+* C3 large :: 0.0291
+* C4 large :: 0.0306
+* C5 large :: 0.0338
+* M4 large :: 0.0321
+* M5 large :: 0.0339
+* R3, R4
