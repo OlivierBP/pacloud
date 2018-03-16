@@ -1,0 +1,20 @@
+{
+	"name": "example",
+	"description": "Just a test package",
+	"versions": [
+		{
+			"number": "2.4",
+			"installed": true,
+			"dependencies": [
+				"test>=2"
+			]
+		},
+		{
+			"number": "1.8",
+			"installed": false,
+			"dependencies": [
+				"test<=1.9"
+			]
+		}
+	]
+}
