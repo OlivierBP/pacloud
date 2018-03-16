@@ -4,15 +4,436 @@
 # License MIT 
 
 AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  AWS CloudFormation template for the Pacloud project
 
-Parameters:
+Parameters: 
+  AlarmEmail: 
+    Default: nobody@amazon.com
+    Description: Email address to notify if operational problems arise
+    Type: String
 
 
-Mappings:
+# Mappings:
 
 
 
 Resources:
+  ################## LAMBDA PACKAGE REQUEST ##################
+  LambdaPackageRequest:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Code:
+        ZipFile: !Join 
+          - |+
+          
+          - - '''use strict'';'
+            - ''
+            - // PackageRequest Package Lambda
+            - 'exports.handler = (event, context, callback) => {'
+            - '  console.log(''Event:'', JSON.stringify(event));'
+            - '  const name = event.name || ''NONE'';'
+            - '  const response = {response: `You requested the package ${name}`};'
+            - '  callback(null, response);'
+            - '};'
+      Description: Check if a package is already compiled. If yes, return the URL, if no, request to compile it
+      FunctionName: LambdaPackageRequest
+      Handler: index.handler
+      Role: !GetAtt 
+        - LambdaPackageRequestRole
+        - Arn
+      Runtime: nodejs4.3
+      Timeout: 10
+      MemorySize: 128
+      Tags:
+        - Key: Project
+          Value: Pacloud
+        - Key: Name
+          Value: LambdaPackageRequest
+
+  LambdaPackageRequestRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+
+
+  ################## LAMBDA SYNC CLIENT DB ##################
+  LambdaSyncClientDb:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Code:
+        ZipFile: !Join 
+          - |+
+          
+          - - '''use strict'';'
+            - ''
+            - // PackageRequest Package Lambda
+            - 'exports.handler = (event, context, callback) => {'
+            - '  console.log(''Event:'', JSON.stringify(event));'
+            - '  const response = {response: `Here is the list of all the packages and versions`};'
+            - '  callback(null, response);'
+            - '};'
+      Description: Return the list of all the packages and versions
+      FunctionName: LambdaSyncClientDb
+      Handler: index.handler
+      Role: !GetAtt 
+        - LambdaSyncClientDbRole
+        - Arn
+      Runtime: nodejs4.3
+      Timeout: 10
+      MemorySize: 128
+      Tags:
+        - Key: Project
+          Value: Pacloud
+        - Key: Name
+          Value: LambdaSyncClientDb
+
+  LambdaSyncClientDbRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+
+
+  ################## API GATEWAY ##################
+  PacloudApi:
+    Type: 'AWS::ApiGateway::RestApi'
+    Properties:
+      Name: Pacloud API
+      FailOnWarnings: true
+      
+  ApiGatewayCloudWatchLogsRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: ApiGatewayLogsPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:DescribeLogGroups'
+                  - 'logs:DescribeLogStreams'
+                  - 'logs:PutLogEvents'
+                  - 'logs:GetLogEvents'
+                  - 'logs:FilterLogEvents'
+                Resource: '*'
+
+  ApiGatewayAccount:
+    Type: 'AWS::ApiGateway::Account'
+    Properties:
+      CloudWatchRoleArn: !GetAtt 
+        - ApiGatewayCloudWatchLogsRole
+        - Arn
+
+  PacloudApiStage:
+    DependsOn:
+      - ApiGatewayAccount
+    Type: 'AWS::ApiGateway::Stage'
+    Properties:
+      DeploymentId: !Ref ApiDeployment
+      MethodSettings:
+        - DataTraceEnabled: true
+          HttpMethod: '*'
+          LoggingLevel: INFO
+          ResourcePath: /*
+      RestApiId: !Ref PacloudApi
+      StageName: LATEST
+
+  ApiDeployment:
+    Type: 'AWS::ApiGateway::Deployment'
+    DependsOn:
+      - PackageRequest
+      - SyncRequest
+    Properties:
+      RestApiId: !Ref PacloudApi
+      StageName: DummyStage
+
+  LambdaPackageRequestPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:invokeFunction'
+      FunctionName: !GetAtt 
+        - LambdaPackageRequest
+        - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Join 
+        - ''
+        - - 'arn:aws:execute-api:'
+          - !Ref 'AWS::Region'
+          - ':'
+          - !Ref 'AWS::AccountId'
+          - ':'
+          - !Ref PacloudApi
+          - /*
+
+  PackageResource:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId: !Ref PacloudApi
+      ParentId: !GetAtt 
+        - PacloudApi
+        - RootResourceId
+      PathPart: package
+
+  PackageRequest:
+    DependsOn: LambdaPackageRequestPermission
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: GET
+      Integration:
+        Type: AWS
+        IntegrationHttpMethod: POST
+        Uri: !Join 
+          - ''
+          - - 'arn:aws:apigateway:'
+            - !Ref 'AWS::Region'
+            - ':lambda:path/2015-03-31/functions/'
+            - !GetAtt 
+              - LambdaPackageRequest
+              - Arn
+            - /invocations
+        IntegrationResponses:
+          - StatusCode: 200
+        RequestTemplates:
+          application/json: !Join 
+            - ''
+            - - '{'
+              - '  "name": "$input.params(''name'')"'
+              - '}'
+      RequestParameters:
+        method.request.querystring.name: false
+      ResourceId: !Ref PackageResource
+      RestApiId: !Ref PacloudApi
+      MethodResponses:
+        - StatusCode: 200
+
+  SyncResource:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId: !Ref PacloudApi
+      ParentId: !GetAtt 
+        - PacloudApi
+        - RootResourceId
+      PathPart: sync
+
+  LambdaSyncClientDbPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:invokeFunction'
+      FunctionName: !GetAtt 
+        - LambdaSyncClientDb
+        - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Join 
+        - ''
+        - - 'arn:aws:execute-api:'
+          - !Ref 'AWS::Region'
+          - ':'
+          - !Ref 'AWS::AccountId'
+          - ':'
+          - !Ref PacloudApi
+          - /*
+
+  SyncRequest:
+    DependsOn: LambdaSyncClientDbPermission
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: GET
+      Integration:
+        Type: AWS
+        IntegrationHttpMethod: POST
+        Uri: !Join 
+          - ''
+          - - 'arn:aws:apigateway:'
+            - !Ref 'AWS::Region'
+            - ':lambda:path/2015-03-31/functions/'
+            - !GetAtt 
+              - LambdaSyncClientDb
+              - Arn
+            - /invocations
+        IntegrationResponses:
+          - StatusCode: 200
+        RequestTemplates:
+          application/json: !Join 
+            - ''
+            - - '{'
+              - '  "name": "$input.params(''name'')"'
+              - '}'
+      RequestParameters:
+        method.request.querystring.name: false
+      ResourceId: !Ref SyncResource
+      RestApiId: !Ref PacloudApi
+      MethodResponses:
+        - StatusCode: 200
+
+
+  ################## SQS ##################
+  QueueToCompile: 
+    Type: "AWS::SQS::Queue"
+    Properties: 
+      QueueName: "QueueToCompile"
+      MaximumMessageSize: 1024
+      MessageRetentionPeriod: 345600
+      VisibilityTimeout: 7200
+      RedrivePolicy: 
+        deadLetterTargetArn: 
+          Fn::GetAtt: 
+            - "DeadLetterQueueToCompile"
+            - "Arn"
+        maxReceiveCount: 2
+
+  # If a package tried to be compiled more than 2 times, the request is put in this queue
+  DeadLetterQueueToCompile: 
+    Type: "AWS::SQS::Queue"
+    Properties: 
+      QueueName: "DeadLetterQueueToCompile"
+      MaximumMessageSize: 262144
+      MessageRetentionPeriod: 1209600
+
+
+  ################## SNS ##################
+  AlarmTopic: 
+    Type: "AWS::SNS::Topic"
+    Properties: 
+      Subscription: 
+        - 
+          Endpoint: !Ref "AlarmEmail"
+          Protocol: "email"
+
+
+  ################## S3 ##################
+  # S3 bucket to store the packages
+  # Alarm with SNS if all replicas are lost for an object
+  # Encrypted with Amazon S3-managed keys SSE-S3
+  S3BucketPacloud:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicRead
+      LoggingConfiguration:
+        DestinationBucketName: !Ref 'S3BucketPacloudLogging'
+        LogFilePrefix: logs
+      NotificationConfiguration:
+        TopicConfigurations:
+        - Topic: !Ref AlarmTopic
+          Event: s3:ReducedRedundancyLostObject
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  # Encrypted with Amazon S3-managed keys SSE-S3
+  # LifeCycle: After 150 days, move the log file to the glacier
+  S3BucketPacloudLogging:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: LogDeliveryWrite
+      LifecycleConfiguration:
+        Rules:
+        - Id: GlacierRule
+          Status: Enabled
+          Transitions:
+            - TransitionInDays: '150'
+              StorageClass: Glacier
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+        
+
+  ################## CloudFront ##################
+# CloudFrontDistribution:
+#     Type: 'AWS::CloudFront::Distribution'
+#     Properties:
+#       DistributionConfig:
+#         Enabled: true
+#         HttpVersion: http2
+#         Logging: true
+#         DefaultCacheBehavior:
+#           LambdaFunctionAssociations:
+#             - EventType: string-value
+#               LambdaFunctionARN: string-value
+#         IPV6Enabled: true
+#         Origins:
+#           - CustomOriginConfig:
+#               OriginKeepaliveTimeout: integer-value
+#               OriginReadTimeout: integer-value
+#       Tags:
+#         - Key: Project
+#           Value: Pacloud
+
+# DefaultRootObject
 
 
 
+   
+Outputs:
+  ApiRootUrl:
+    Description: Root URL of the API gateway
+    Value: !Join 
+      - ''
+      - - 'https://'
+        - !Ref PacloudApi
+        - .execute-api.
+        - !Ref 'AWS::Region'
+        - .amazonaws.com
+  ApiRequestPackageUrl:
+    Description: Url to request a package
+    Value: !Join 
+      - ''
+      - - 'https://'
+        - !Ref PacloudApi
+        - .execute-api.
+        - !Ref 'AWS::Region'
+        - .amazonaws.com
+        - /LATEST/package?name=packagename
+  ApiSyncClientDbUrl:
+    Description: Url to sync the package database
+    Value: !Join 
+      - ''
+      - - 'https://'
+        - !Ref PacloudApi
+        - .execute-api.
+        - !Ref 'AWS::Region'
+        - .amazonaws.com
+        - /LATEST/sync
+
+  BucketStorage:
+    Value: !Ref 'S3BucketPacloud'
+    Description: Bucket to store the packages and any public data
+  BucketLogging:
+    Value: !Ref 'S3BucketPacloudLogging'
+    Description: Bucket to store the logging for Pacloud
+
+  AlarmEmail:
+    Value: !Ref AlarmEmail
+    Description: Email address to notify if operational problems arise
