@@ -7,7 +7,6 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: >-
   AWS CloudFormation template for the Pacloud project
 
-# Parameters: 
 Parameters: 
   AlarmEmail: 
     Default: nobody@amazon.com
@@ -20,7 +19,6 @@ Parameters:
 
 
 Resources:
-
   ################## LAMBDA PACKAGE REQUEST ##################
   LambdaPackageRequest:
     Type: 'AWS::Lambda::Function'
@@ -322,10 +320,6 @@ Resources:
       MessageRetentionPeriod: 1209600
 
 
-
-
-
-
   ################## SNS ##################
   AlarmTopic: 
     Type: "AWS::SNS::Topic"
@@ -356,18 +350,48 @@ Resources:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
 
-
   # Encrypted with Amazon S3-managed keys SSE-S3
+  # LifeCycle: After 150 days, move the log file to the glacier
   S3BucketPacloudLogging:
     Type: AWS::S3::Bucket
     Properties:
       AccessControl: LogDeliveryWrite
+      LifecycleConfiguration:
+        Rules:
+        - Id: GlacierRule
+          Status: Enabled
+          Transitions:
+            - TransitionInDays: '150'
+              StorageClass: Glacier
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
 
         
+
+  ################## CloudFront ##################
+# CloudFrontDistribution:
+#     Type: 'AWS::CloudFront::Distribution'
+#     Properties:
+#       DistributionConfig:
+#         Enabled: true
+#         HttpVersion: http2
+#         Logging: true
+#         DefaultCacheBehavior:
+#           LambdaFunctionAssociations:
+#             - EventType: string-value
+#               LambdaFunctionARN: string-value
+#         IPV6Enabled: true
+#         Origins:
+#           - CustomOriginConfig:
+#               OriginKeepaliveTimeout: integer-value
+#               OriginReadTimeout: integer-value
+#       Tags:
+#         - Key: Project
+#           Value: Pacloud
+
+# DefaultRootObject
 
 
 
