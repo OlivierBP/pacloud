@@ -9,12 +9,51 @@ Description: >-
 
 Parameters: 
   AlarmEmail: 
-    Default: nobody@amazon.com
     Description: Email address to notify if operational problems arise
+    Default: nobody@amazon.com
     Type: String
+  
+  Ec2SpotFleetTargetCapacity:
+    Description: Target capacity for the EC2 spot fleet
+    Default: 1
+    Type: Number
+
+  SpotFleetEc2InstanceType:
+    Description: >-
+      EC2 instance type for the spot fleet
+    Type: String
+    Default: c3.large
+    AllowedValues:
+      - c3.large
+      - c4.large
+      - c5.large
+      - m4.large
+      - m5.large
+    ConstraintDescription: Must be a valid instance type that can hibernate
+
+  KeyPairName:
+    Description: KeyPair to use to can access the EC2 instances by SSH
+    Default: KeyPair_Server1.pem
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
 
 
-# Mappings:
+
+Mappings:
+  AWSInstanceType2Arch:
+    c3.large:
+      Arch: '64'
+    c4.large:
+      Arch: '64'
+    c5.large:
+      Arch: '64'
+    m4.large:
+      Arch: '64'
+    m5.large:
+      Arch: '64'
+  AWSRegionArch2AMI:
+    eu-west-1:
+      '64': ami-e795dd9e
 
 
 
@@ -300,7 +339,6 @@ Resources:
   QueueToCompile: 
     Type: "AWS::SQS::Queue"
     Properties: 
-      QueueName: "QueueToCompile"
       MaximumMessageSize: 1024
       MessageRetentionPeriod: 345600
       VisibilityTimeout: 7200
@@ -315,7 +353,6 @@ Resources:
   DeadLetterQueueToCompile: 
     Type: "AWS::SQS::Queue"
     Properties: 
-      QueueName: "DeadLetterQueueToCompile"
       MaximumMessageSize: 262144
       MessageRetentionPeriod: 1209600
 
@@ -370,7 +407,7 @@ Resources:
 
         
 
-  ################## CloudFront ##################
+  ################## CLOUDFRONT ##################
 # CloudFrontDistribution:
 #     Type: 'AWS::CloudFront::Distribution'
 #     Properties:
@@ -392,6 +429,193 @@ Resources:
 #           Value: Pacloud
 
 # DefaultRootObject
+
+
+  ################## EC2 SPOT FLEET ##################
+  PacloudEc2SpotFleetRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - spotfleet.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+
+  PacloudEc2SpotFleetRolePolicies:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyName: PacloudEc2SpotFleetRolePolicy 
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'ec2:DescribeImages'
+              - 'ec2:DescribeSubnets'
+              - 'ec2:RequestSpotInstances'
+              - 'ec2:DescribeInstanceStatus'
+            Resource:
+              - '*'
+          - Effect: Allow
+            Action:
+              - 'iam:PassRole'
+            Resource:
+              - '*'
+            Condition:
+              StringEquals:
+                'iam:PassedToService':
+                  - ec2.amazonaws.com
+                  - ec2.amazonaws.com.cn
+          - Effect: Allow
+            Action:
+              - 'ec2:CreateTags'
+            Resource:
+              - 'arn:aws:ec2:*:*:instance/*'
+              - 'arn:aws:ec2:*:*:spot-instances-request/*'
+            Condition:
+              'ForAllValues:StringEquals':
+                'aws:TagKeys':
+                  - 'aws:ec2spot:fleet-request-id'
+          - Effect: Allow
+            Action:
+              - 'ec2:TerminateInstances'
+            Resource: '*'
+            Condition:
+              StringLike:
+                'ec2:ResourceTag/aws:ec2spot:fleet-request-id': '*'
+      Roles:
+        - !Ref PacloudEc2SpotFleetRole
+
+  VpcPacloudSpotFleet:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      Tags:
+        - Key: Name
+          Value: PacloudSpotFleet
+
+  IgVpcPacloudSpotFleet:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties:
+      Tags:
+        - Key: Name
+          Value: IgVpcPacloudSpotFleet
+    DependsOn:
+      - VpcPacloudSpotFleet
+
+  VPCGatewayAttachmentForIg:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      InternetGatewayId: !Ref IgVpcPacloudSpotFleet
+      VpcId: !Ref VpcPacloudSpotFleet
+
+  PrivateSubnetPacloudSpotFleet:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VpcPacloudSpotFleet
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: eu-west-1a
+      Tags:
+        - Key: Name
+          Value: VpcPacloudSpotFleet
+    DependsOn:
+      - VpcPacloudSpotFleet
+
+########################################################
+########################################################
+# To remplace by a NAT
+# And put a bastion server if want to access the instance by ssh ??
+  RouteTablePublicSubnet1:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VpcPacloudSpotFleet
+      Tags:
+        - Key: Name
+          Value: RouteTablePublicSubnet1
+  RouteToIgPublicSubnet1:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePublicSubnet1
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref IgVpcPacloudSpotFleet
+    DependsOn: VPCGatewayAttachmentForIg
+  SubnetRouteTableAssociation1:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref RouteTablePublicSubnet1
+      SubnetId: !Ref PrivateSubnetPacloudSpotFleet
+########################################################
+########################################################
+
+    # TODO change the rules ??
+    # Not any port allow ??
+  # And put a bastion server if want to access the instance by ssh ?? so 1 port and only from the sg of the bastion ??
+  SgPacloudSpotFleet:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: pacloud-spotfleet-sg
+      GroupName: pacloud-spotfleet-sg
+      VpcId: !Ref VpcPacloudSpotFleet
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          # SourceSecurityGroupId: !Ref SgWebElb
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: pacloud-spotfleet-sg
+
+  SpotFleet:
+    Type: AWS::EC2::SpotFleet
+    Properties:
+      SpotFleetRequestConfigData:
+        AllocationStrategy: lowestPrice
+        ExcessCapacityTerminationPolicy: default
+        IamFleetRole: !GetAtt [PacloudEc2SpotFleetRole, Arn]
+        ReplaceUnhealthyInstances: true
+        # SpotPrice: '1000'
+        TargetCapacity: !Ref Ec2SpotFleetTargetCapacity
+        TerminateInstancesWithExpiration: true
+        Type: maintain
+        
+        LaunchSpecifications:
+        - EbsOptimized: 'false'
+          # IamInstanceProfile: 
+          ImageId:
+            Fn::FindInMap:
+            - AWSRegionArch2AMI
+            - !Ref AWS::Region
+            - Fn::FindInMap:
+              - AWSInstanceType2Arch
+              - !Ref SpotFleetEc2InstanceType
+              - Arch
+          InstanceType: !Ref SpotFleetEc2InstanceType
+          KeyName: !Ref KeyPairName
+          Monitoring: 
+            Enabled: true
+          SecurityGroups:
+          - GroupId:
+              Fn::GetAtt:
+              - SgPacloudSpotFleet
+              - GroupId
+          # SpotPrice: 
+          SubnetId: !Ref PrivateSubnetPacloudSpotFleet
+          TagSpecifications: 
+          - ResourceType: instance
+            Tags:
+            - Key: Project
+              Value: Pacloud
+            - Key: Name
+              Value: PacloudSpotInstance
+# InstanceInterruptionBehavior to hibernate needs a workaround: doesn't work in CloudFormation (not implemented)   
+
+
+
+
 
 
 
