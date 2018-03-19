@@ -588,15 +588,27 @@ Resources:
       VpcId: !Ref VpcPacloudSpotFleet
 
   # Private subnet for all the EC2 spot instances
-  PrivateSubnetPacloudSpotFleet:
+  PrivateSubnetPacloudSpotFleet1:
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref VpcPacloudSpotFleet
-      CidrBlock: 10.0.0.0/24
+      CidrBlock: 10.0.1.0/24
       AvailabilityZone: eu-west-1a
       Tags:
         - Key: Name
-          Value: PrivateSubnetPacloudSpotFleet
+          Value: PrivateSubnetPacloudSpotFleet1
+    DependsOn:
+      - VpcPacloudSpotFleet
+  # Private subnet for all the EC2 spot instances
+  PrivateSubnetPacloudSpotFleet2:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VpcPacloudSpotFleet
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: eu-west-1b
+      Tags:
+        - Key: Name
+          Value: PrivateSubnetPacloudSpotFleet2
     DependsOn:
       - VpcPacloudSpotFleet
 
@@ -605,7 +617,7 @@ Resources:
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref VpcPacloudSpotFleet
-      CidrBlock: 10.0.1.0/24
+      CidrBlock: 10.0.0.0/24
       AvailabilityZone: eu-west-1a
       Tags:
         - Key: Name
@@ -729,7 +741,10 @@ Resources:
               - SgPacloudSpotFleet
               - GroupId
           # SpotPrice: 
-          SubnetId: !Ref PrivateSubnetPacloudSpotFleet
+          SubnetId: !Join
+            - ','
+            - - !Ref PrivateSubnetPacloudSpotFleet1 
+              - !Ref PrivateSubnetPacloudSpotFleet2
           TagSpecifications: 
           - ResourceType: instance
             Tags:
@@ -738,34 +753,6 @@ Resources:
             - Key: Name
               Value: PacloudSpotInstance
 
-        # - EbsOptimized: 'false'
-        #   # IamInstanceProfile: 
-        #   ImageId:
-        #     Fn::FindInMap:
-        #     - SpotInstanceRegionArch2AMI
-        #     - !Ref AWS::Region
-        #     - Fn::FindInMap:
-        #       - SpotInstanceType2Arch
-        #       - !Ref SpotFleetEc2InstanceType
-        #       - Arch
-        #   InstanceType: !Ref SpotFleetEc2InstanceType
-        #   KeyName: !Ref KeyPairSpotFleet
-        #   Monitoring: 
-        #     Enabled: true
-        #   SecurityGroups:
-        #   - GroupId:
-        #       Fn::GetAtt:
-        #       - SgPacloudSpotFleet
-        #       - GroupId
-        #   # SpotPrice: 
-        #   SubnetId: !Ref PrivateSubnetPacloudSpotFleet
-        #   TagSpecifications: 
-        #   - ResourceType: instance
-        #     Tags:
-        #     - Key: Project
-        #       Value: Pacloud
-        #     - Key: Name
-        #       Value: PacloudSpotInstance
 
 # InstanceInterruptionBehavior to hibernate needs a workaround: doesn't work in CloudFormation (not implemented)   
 
@@ -823,4 +810,4 @@ Outputs:
     Description: Public IP address of the bastion server
   SpotInstanceConnect:
     Value: ssh -i /path/to/key/spot.pem -o ProxyCommand='ssh -i /path/to/key/bastion.pem -W %h:%p user@publicIpBastion' user@privateIpSpot
-    Description: Connection chain to reach spot instance through the bastion server
+    Description: Connection chain to reach spot instance through the bastion server with local ssh keys

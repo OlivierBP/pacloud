@@ -186,7 +186,7 @@ Version tableau json avec les versions
 * Request Amazon API Gateway
 
 
-### Connection to a spot instance through the bastion server
+### Connection to a spot instance through the bastion server with local keys
 
 ```SHELL
 ssh -i ~/Bureau/KeyPair_Server1.pem -o ProxyCommand='ssh -i ~/Bureau/KeyPair_Server1.pem -W %h:%p ubuntu@34.244.176.197' ubuntu@10.0.0.38
