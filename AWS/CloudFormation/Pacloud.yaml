@@ -587,7 +587,7 @@ Resources:
       InternetGatewayId: !Ref IgVpcPacloudSpotFleet
       VpcId: !Ref VpcPacloudSpotFleet
 
-  # Private subnet for all the EC2 spot instances
+  # Private subnets for all the EC2 spot instances
   PrivateSubnetPacloudSpotFleet1:
     Type: 'AWS::EC2::Subnet'
     Properties:
@@ -599,7 +599,6 @@ Resources:
           Value: PrivateSubnetPacloudSpotFleet1
     DependsOn:
       - VpcPacloudSpotFleet
-  # Private subnet for all the EC2 spot instances
   PrivateSubnetPacloudSpotFleet2:
     Type: 'AWS::EC2::Subnet'
     Properties:
@@ -609,6 +608,17 @@ Resources:
       Tags:
         - Key: Name
           Value: PrivateSubnetPacloudSpotFleet2
+    DependsOn:
+      - VpcPacloudSpotFleet
+  PrivateSubnetPacloudSpotFleet3:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VpcPacloudSpotFleet
+      CidrBlock: 10.0.3.0/24
+      AvailabilityZone: eu-west-1c
+      Tags:
+        - Key: Name
+          Value: PrivateSubnetPacloudSpotFleet3
     DependsOn:
       - VpcPacloudSpotFleet
 
@@ -745,6 +755,7 @@ Resources:
             - ','
             - - !Ref PrivateSubnetPacloudSpotFleet1 
               - !Ref PrivateSubnetPacloudSpotFleet2
+              - !Ref PrivateSubnetPacloudSpotFleet3
           TagSpecifications: 
           - ResourceType: instance
             Tags:
@@ -752,9 +763,80 @@ Resources:
               Value: Pacloud
             - Key: Name
               Value: PacloudSpotInstance
-
-
 # InstanceInterruptionBehavior to hibernate needs a workaround: doesn't work in CloudFormation (not implemented)   
+
+
+  # NAT GATEWAY
+  NAT:
+    DependsOn: VPCGatewayAttachmentForIg
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+        - ElasticIpNat
+        - AllocationId
+      SubnetId: !Ref PublicSubnetPacloud
+      Tags:
+        - Key: Project
+          Value: Pacloud
+        - Key: Name
+          Value: PacloudNAT
+  ElasticIpNat:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  
+  # Default routes for the private subnets point to the NAT
+  RouteTablePrivateSubnet1:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VpcPacloudSpotFleet
+  RouteToNatPrivateSubnet1:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateSubnet1
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NAT
+    DependsOn: NAT
+  PrivateSubnet1RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateSubnet1
+      SubnetId: !Ref PrivateSubnetPacloudSpotFleet1
+
+  RouteTablePrivateSubnet2:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VpcPacloudSpotFleet
+  RouteToNatPrivateSubnet2:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateSubnet2
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NAT
+    DependsOn: NAT
+  PrivateSubnet2SubnetRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateSubnet2
+      SubnetId: !Ref PrivateSubnetPacloudSpotFleet2
+
+  RouteTablePrivateSubnet3:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VpcPacloudSpotFleet
+  RouteToNatPrivateSubnet3:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateSubnet3
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NAT
+    DependsOn: NAT
+  PrivateSubnet3SubnetRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateSubnet3
+      SubnetId: !Ref PrivateSubnetPacloudSpotFleet3
 
 
 
