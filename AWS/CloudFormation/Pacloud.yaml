@@ -31,16 +31,80 @@ Parameters:
       - m5.large
     ConstraintDescription: Must be a valid instance type that can hibernate
 
-  KeyPairName:
+  KeyPairSpotFleet:
     Description: KeyPair to use to can access the EC2 instances by SSH
     Default: KeyPair_Server1.pem
     Type: 'AWS::EC2::KeyPair::KeyName'
     ConstraintDescription: must be the name of an existing EC2 KeyPair.
 
+  KeyPairBastionServer:
+    Description: KeyPair to use to can access the bastion server by SSH
+    Default: KeyPair_Server1.pem
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+
+  BastionServerInstanceType:
+    Description: >-
+      EC2 instance type for the bastion server
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+
+  SpotFleetAllocationStrategy:
+    Description: Choose the instance the be the cheapest or to give higher availability first
+    Type: String
+    Default: lowestPrice
+    AllowedValues:
+      - lowestPrice
+      - diversified
+
+
+Metadata: 
+  AWS::CloudFormation::Interface: 
+    ParameterGroups: 
+      - 
+        Label: 
+          default: EC2 Spot Fleet Configuration
+        Parameters: 
+          - SpotFleetEc2InstanceType
+          - Ec2SpotFleetTargetCapacity
+          - SpotFleetAllocationStrategy
+          - KeyPairSpotFleet
+      - 
+        Label: 
+          default: Bastion server Configuration
+        Parameters: 
+          - BastionServerInstanceType
+          - KeyPairBastionServer
+      - 
+        Label: 
+          default: Alarm configuration
+        Parameters: 
+          - AlarmEmail
+
+    ParameterLabels: 
+      SpotFleetEc2InstanceType: 
+        default: Instance type
+      Ec2SpotFleetTargetCapacity: 
+        default: Number of instances
+      KeyPairSpotFleet: 
+        default: KeyPair
+      AlarmEmail: 
+        default: E-mail
+      BastionServerInstanceType:
+        default: Instance type
+      KeyPairBastionServer: 
+        default: KeyPair
+      SpotFleetAllocationStrategy:
+        default: Allocation strategy
+
+
+
 
 
 Mappings:
-  AWSInstanceType2Arch:
+  SpotInstanceType2Arch:
     c3.large:
       Arch: '64'
     c4.large:
@@ -51,9 +115,17 @@ Mappings:
       Arch: '64'
     m5.large:
       Arch: '64'
-  AWSRegionArch2AMI:
+  SpotInstanceRegionArch2AMI:
     eu-west-1:
       '64': ami-e795dd9e
+
+  BastionInstanceType2Arch:
+    t2.micro:
+      Arch: '64'
+  BastionInstanceRegionArch2AMI:
+    eu-west-1:
+      '64': ami-e795dd9e
+
 
 
 
@@ -489,6 +561,7 @@ Resources:
       Roles:
         - !Ref PacloudEc2SpotFleetRole
 
+  # VPC
   VpcPacloudSpotFleet:
     Type: 'AWS::EC2::VPC'
     Properties:
@@ -497,6 +570,7 @@ Resources:
         - Key: Name
           Value: PacloudSpotFleet
 
+  # Internet Gateway for the VPC
   IgVpcPacloudSpotFleet:
     Type: 'AWS::EC2::InternetGateway'
     Properties:
@@ -506,53 +580,104 @@ Resources:
     DependsOn:
       - VpcPacloudSpotFleet
 
+  # Need to attach the Internet Gateway to the VPC
   VPCGatewayAttachmentForIg:
     Type: 'AWS::EC2::VPCGatewayAttachment'
     Properties:
       InternetGatewayId: !Ref IgVpcPacloudSpotFleet
       VpcId: !Ref VpcPacloudSpotFleet
 
+  # Private subnet for all the EC2 spot instances
   PrivateSubnetPacloudSpotFleet:
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref VpcPacloudSpotFleet
-      CidrBlock: 10.0.2.0/24
+      CidrBlock: 10.0.0.0/24
       AvailabilityZone: eu-west-1a
       Tags:
         - Key: Name
-          Value: VpcPacloudSpotFleet
+          Value: PrivateSubnetPacloudSpotFleet
     DependsOn:
       - VpcPacloudSpotFleet
 
-########################################################
-########################################################
-# To remplace by a NAT
-# And put a bastion server if want to access the instance by ssh ??
-  RouteTablePublicSubnet1:
+  # Public subnet for the bastion server and the NAT Gateway
+  PublicSubnetPacloud:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VpcPacloudSpotFleet
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: eu-west-1a
+      Tags:
+        - Key: Name
+          Value: PublicSubnetPacloud
+    DependsOn:
+      - VpcPacloudSpotFleet
+
+  # Create the default route to internet for the public subnet
+  RouteTablePublicSubnet:
     Type: 'AWS::EC2::RouteTable'
     Properties:
       VpcId: !Ref VpcPacloudSpotFleet
       Tags:
         - Key: Name
-          Value: RouteTablePublicSubnet1
-  RouteToIgPublicSubnet1:
+          Value: RouteTablePublicSubnet
+  RouteToIgPublicSubnet:
     Type: 'AWS::EC2::Route'
     Properties:
-      RouteTableId: !Ref RouteTablePublicSubnet1
+      RouteTableId: !Ref RouteTablePublicSubnet
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref IgVpcPacloudSpotFleet
     DependsOn: VPCGatewayAttachmentForIg
-  SubnetRouteTableAssociation1:
+  SubnetRouteTableAssociation:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Properties:
-      RouteTableId: !Ref RouteTablePublicSubnet1
-      SubnetId: !Ref PrivateSubnetPacloudSpotFleet
-########################################################
-########################################################
+      RouteTableId: !Ref RouteTablePublicSubnet
+      SubnetId: !Ref PublicSubnetPacloud
 
-    # TODO change the rules ??
-    # Not any port allow ??
-  # And put a bastion server if want to access the instance by ssh ?? so 1 port and only from the sg of the bastion ??
+  # Security group fot the bastion server
+  SgPacloudBastionServer:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: pacloud-bastionserver-sg
+      GroupName: pacloud-bastionserver-sg
+      VpcId: !Ref VpcPacloudSpotFleet
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: pacloud-bastionserver-sg
+
+  # Bastion server
+  BastionServer: 
+    Type: "AWS::EC2::Instance"
+    Properties:
+      InstanceType: !Ref BastionServerInstanceType
+      ImageId: 
+        Fn::FindInMap: 
+          - BastionInstanceRegionArch2AMI
+          - !Ref "AWS::Region"
+          - Fn::FindInMap:
+              - BastionInstanceType2Arch
+              - !Ref BastionServerInstanceType
+              - Arch
+      KeyName: !Ref KeyPairBastionServer
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeleteOnTermination: true
+          DeviceIndex: 0
+          GroupSet: 
+            - !Ref SgPacloudBastionServer
+          SubnetId: !Ref PublicSubnetPacloud
+      Tags:
+      - Key: Project
+        Value: Pacloud
+      - Key: Name
+        Value: BastionServer
+
+  # Security group for the spot instances: accept only ssh connections from the bastion server
   SgPacloudSpotFleet:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
@@ -563,8 +688,8 @@ Resources:
         - IpProtocol: tcp
           FromPort: '22'
           ToPort: '22'
-          # SourceSecurityGroupId: !Ref SgWebElb
-          CidrIp: 0.0.0.0/0
+          SourceSecurityGroupId: !Ref SgPacloudBastionServer
+          # CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
           Value: pacloud-spotfleet-sg
@@ -573,7 +698,7 @@ Resources:
     Type: AWS::EC2::SpotFleet
     Properties:
       SpotFleetRequestConfigData:
-        AllocationStrategy: lowestPrice
+        AllocationStrategy: !Ref SpotFleetAllocationStrategy
         ExcessCapacityTerminationPolicy: default
         IamFleetRole: !GetAtt [PacloudEc2SpotFleetRole, Arn]
         ReplaceUnhealthyInstances: true
@@ -583,18 +708,19 @@ Resources:
         Type: maintain
         
         LaunchSpecifications:
+
         - EbsOptimized: 'false'
           # IamInstanceProfile: 
           ImageId:
             Fn::FindInMap:
-            - AWSRegionArch2AMI
+            - SpotInstanceRegionArch2AMI
             - !Ref AWS::Region
             - Fn::FindInMap:
-              - AWSInstanceType2Arch
+              - SpotInstanceType2Arch
               - !Ref SpotFleetEc2InstanceType
               - Arch
           InstanceType: !Ref SpotFleetEc2InstanceType
-          KeyName: !Ref KeyPairName
+          KeyName: !Ref KeyPairSpotFleet
           Monitoring: 
             Enabled: true
           SecurityGroups:
@@ -611,6 +737,36 @@ Resources:
               Value: Pacloud
             - Key: Name
               Value: PacloudSpotInstance
+
+        # - EbsOptimized: 'false'
+        #   # IamInstanceProfile: 
+        #   ImageId:
+        #     Fn::FindInMap:
+        #     - SpotInstanceRegionArch2AMI
+        #     - !Ref AWS::Region
+        #     - Fn::FindInMap:
+        #       - SpotInstanceType2Arch
+        #       - !Ref SpotFleetEc2InstanceType
+        #       - Arch
+        #   InstanceType: !Ref SpotFleetEc2InstanceType
+        #   KeyName: !Ref KeyPairSpotFleet
+        #   Monitoring: 
+        #     Enabled: true
+        #   SecurityGroups:
+        #   - GroupId:
+        #       Fn::GetAtt:
+        #       - SgPacloudSpotFleet
+        #       - GroupId
+        #   # SpotPrice: 
+        #   SubnetId: !Ref PrivateSubnetPacloudSpotFleet
+        #   TagSpecifications: 
+        #   - ResourceType: instance
+        #     Tags:
+        #     - Key: Project
+        #       Value: Pacloud
+        #     - Key: Name
+        #       Value: PacloudSpotInstance
+
 # InstanceInterruptionBehavior to hibernate needs a workaround: doesn't work in CloudFormation (not implemented)   
 
 
@@ -661,3 +817,10 @@ Outputs:
   AlarmEmail:
     Value: !Ref AlarmEmail
     Description: Email address to notify if operational problems arise
+
+  BastionServer:
+    Value: !GetAtt BastionServer.PublicIp
+    Description: Public IP address of the bastion server
+  SpotInstanceConnect:
+    Value: ssh -i /path/to/key/spot.pem -o ProxyCommand='ssh -i /path/to/key/bastion.pem -W %h:%p user@publicIpBastion' user@privateIpSpot
+    Description: Connection chain to reach spot instance through the bastion server
