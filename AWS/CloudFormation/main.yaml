@@ -1,0 +1,156 @@
+# Pacloud project
+# Main template
+# https://github.com/OlivierBP/Pacloud
+# Created 2018-03-18 by BAL-PETRE Olivier
+# License MIT 
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Pacloud project (main template)
+
+
+Parameters:
+  AlarmEmail: 
+    Description: Email address to notify if operational problems arise
+    Default: nobody@amazon.com
+    Type: String
+
+  Ec2SpotFleetTargetCapacity:
+    Description: Target capacity for the EC2 spot fleet
+    Default: 1
+    Type: Number
+
+  SpotFleetEc2InstanceType:
+    Description: >-
+      EC2 instance type for the spot fleet
+    Type: String
+    Default: c3.large
+    AllowedValues:
+      - c3.large
+      - c4.large
+      - c5.large
+      - m4.large
+      - m5.large
+    ConstraintDescription: Must be a valid instance type that can hibernate
+
+  KeyPairSpotFleet:
+    Description: KeyPair to use to can access the EC2 instances by SSH
+    Default: KeyPair_Server1.pem
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+
+  KeyPairBastionServer:
+    Description: KeyPair to use to can access the bastion server by SSH
+    Default: KeyPair_Server1.pem
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+
+  BastionServerInstanceType:
+    Description: >-
+      EC2 instance type for the bastion server
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+
+  SpotFleetAllocationStrategy:
+    Description: Choose the instance the be the cheapest or to give higher availability first
+    Type: String
+    Default: lowestPrice
+    AllowedValues:
+      - lowestPrice
+      - diversified
+
+
+
+Metadata: 
+  AWS::CloudFormation::Interface: 
+    ParameterGroups: 
+      - Label: 
+          default: EC2 Spot Fleet Configuration
+        Parameters: 
+          - SpotFleetEc2InstanceType
+          - Ec2SpotFleetTargetCapacity
+          - SpotFleetAllocationStrategy
+          - KeyPairSpotFleet
+      - Label: 
+          default: Bastion server Configuration
+        Parameters: 
+          - BastionServerInstanceType
+          - KeyPairBastionServer
+      - Label: 
+          default: Alarm configuration
+        Parameters: 
+          - AlarmEmail
+    ParameterLabels: 
+      SpotFleetEc2InstanceType: 
+        default: Instance type
+      Ec2SpotFleetTargetCapacity: 
+        default: Number of instances
+      KeyPairSpotFleet: 
+        default: KeyPair
+      AlarmEmail: 
+        default: E-mail
+      BastionServerInstanceType:
+        default: Instance type
+      KeyPairBastionServer: 
+        default: KeyPair
+      SpotFleetAllocationStrategy:
+        default: Allocation strategy
+
+
+
+
+
+Resources:
+  Serverless:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3-eu-west-1.amazonaws.com/pacloud/Serverless.yaml
+      Parameters:
+        AlarmEmail: !Ref AlarmEmail
+          
+  Network:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3-eu-west-1.amazonaws.com/pacloud/Network.yaml
+
+  Ec2:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3-eu-west-1.amazonaws.com/pacloud/Ec2.yaml
+      Parameters:
+        Ec2SpotFleetTargetCapacity: !Ref Ec2SpotFleetTargetCapacity
+        SpotFleetEc2InstanceType: !Ref SpotFleetEc2InstanceType
+        KeyPairSpotFleet: !Ref KeyPairSpotFleet
+        KeyPairBastionServer: !Ref KeyPairBastionServer
+        BastionServerInstanceType: !Ref BastionServerInstanceType
+        SpotFleetAllocationStrategy: !Ref SpotFleetAllocationStrategy
+        # Parameters from Network
+        VpcPacloudSpotFleet: !GetAtt Network.Outputs.VpcPacloudSpotFleet
+        PublicSubnetPacloud: !GetAtt Network.Outputs.PublicSubnetPacloud
+        PrivateSubnetPacloudSpotFleet1: !GetAtt Network.Outputs.PrivateSubnetPacloudSpotFleet1
+        PrivateSubnetPacloudSpotFleet2: !GetAtt Network.Outputs.PrivateSubnetPacloudSpotFleet2
+        PrivateSubnetPacloudSpotFleet3: !GetAtt Network.Outputs.PrivateSubnetPacloudSpotFleet3
+
+
+
+Outputs:
+
+  ApiRequestPackageUrl:
+    Description: Url to request a package
+    Value: !GetAtt Serverless.Outputs.ApiRequestPackageUrl
+  ApiSyncClientDbUrl:
+    Description: Url to sync the package database
+    Value: !GetAtt Serverless.Outputs.ApiSyncClientDbUrl
+
+  BucketStorage:
+    Value: !GetAtt Serverless.Outputs.S3BucketPacloud
+    Description: Bucket to store the packages and any public data
+  BucketLogging:
+    Value: !GetAtt Serverless.Outputs.S3BucketPacloudLogging
+    Description: Bucket to store the logging for Pacloud
+
+  AlarmEmail:
+    Value: !GetAtt Serverless.Outputs.AlarmEmail
+    Description: Email address to notify if operational problems arise

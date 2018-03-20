@@ -1,0 +1,193 @@
+# Pacloud project
+# Network
+# https://github.com/OlivierBP/Pacloud
+# Created 2018-03-18 by BAL-PETRE Olivier
+# License MIT 
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Creation of the network (NAT included)
+
+
+Resources:
+  # VPC
+  VpcPacloudSpotFleet:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      Tags:
+        - Key: Name
+          Value: PacloudSpotFleet
+
+  # Internet Gateway for the VPC
+  IgVpcPacloudSpotFleet:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties:
+      Tags:
+        - Key: Name
+          Value: IgVpcPacloudSpotFleet
+    DependsOn:
+      - VpcPacloudSpotFleet
+
+  # Need to attach the Internet Gateway to the VPC
+  VPCGatewayAttachmentForIg:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      InternetGatewayId: !Ref IgVpcPacloudSpotFleet
+      VpcId: !Ref VpcPacloudSpotFleet
+
+  # Private subnets for all the EC2 spot instances
+  PrivateSubnetPacloudSpotFleet1:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VpcPacloudSpotFleet
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: eu-west-1a
+      Tags:
+        - Key: Name
+          Value: PrivateSubnetPacloudSpotFleet1
+    DependsOn:
+      - VpcPacloudSpotFleet
+  PrivateSubnetPacloudSpotFleet2:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VpcPacloudSpotFleet
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: eu-west-1b
+      Tags:
+        - Key: Name
+          Value: PrivateSubnetPacloudSpotFleet2
+    DependsOn:
+      - VpcPacloudSpotFleet
+  PrivateSubnetPacloudSpotFleet3:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VpcPacloudSpotFleet
+      CidrBlock: 10.0.3.0/24
+      AvailabilityZone: eu-west-1c
+      Tags:
+        - Key: Name
+          Value: PrivateSubnetPacloudSpotFleet3
+    DependsOn:
+      - VpcPacloudSpotFleet
+
+  # Public subnet for the bastion server and the NAT Gateway
+  PublicSubnetPacloud:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VpcPacloudSpotFleet
+      CidrBlock: 10.0.0.0/24
+      AvailabilityZone: eu-west-1a
+      Tags:
+        - Key: Name
+          Value: PublicSubnetPacloud
+    DependsOn:
+      - VpcPacloudSpotFleet
+
+  # Create the default route to internet for the public subnet
+  RouteTablePublicSubnet:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VpcPacloudSpotFleet
+      Tags:
+        - Key: Name
+          Value: RouteTablePublicSubnet
+  RouteToIgPublicSubnet:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePublicSubnet
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref IgVpcPacloudSpotFleet
+    DependsOn: VPCGatewayAttachmentForIg
+  SubnetRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref RouteTablePublicSubnet
+      SubnetId: !Ref PublicSubnetPacloud
+
+
+
+# NAT GATEWAY
+  NAT:
+    DependsOn: VPCGatewayAttachmentForIg
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+        - ElasticIpNat
+        - AllocationId
+      SubnetId: !Ref PublicSubnetPacloud
+      Tags:
+        - Key: Project
+          Value: Pacloud
+        - Key: Name
+          Value: PacloudNAT
+  ElasticIpNat:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  
+  # Default routes for the private subnets point to the NAT
+  RouteTablePrivateSubnet1:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VpcPacloudSpotFleet
+  RouteToNatPrivateSubnet1:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateSubnet1
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NAT
+    DependsOn: NAT
+  PrivateSubnet1RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateSubnet1
+      SubnetId: !Ref PrivateSubnetPacloudSpotFleet1
+
+  RouteTablePrivateSubnet2:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VpcPacloudSpotFleet
+  RouteToNatPrivateSubnet2:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateSubnet2
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NAT
+    DependsOn: NAT
+  PrivateSubnet2SubnetRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateSubnet2
+      SubnetId: !Ref PrivateSubnetPacloudSpotFleet2
+
+  RouteTablePrivateSubnet3:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VpcPacloudSpotFleet
+  RouteToNatPrivateSubnet3:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateSubnet3
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NAT
+    DependsOn: NAT
+  PrivateSubnet3SubnetRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateSubnet3
+      SubnetId: !Ref PrivateSubnetPacloudSpotFleet3
+
+
+Outputs:
+  VpcPacloudSpotFleet:
+    Value: !Ref VpcPacloudSpotFleet
+  PublicSubnetPacloud:
+    Value: !Ref PublicSubnetPacloud
+  PrivateSubnetPacloudSpotFleet1:
+    Value: !Ref PrivateSubnetPacloudSpotFleet1
+  PrivateSubnetPacloudSpotFleet2:
+    Value: !Ref PrivateSubnetPacloudSpotFleet2
+  PrivateSubnetPacloudSpotFleet3:
+    Value: !Ref PrivateSubnetPacloudSpotFleet3
