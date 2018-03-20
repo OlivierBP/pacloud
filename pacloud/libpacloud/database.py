@@ -3,7 +3,8 @@
 import os
 import json
 
-DB_DIR = '/var/lib/pacloud/db/'
+from config import DB_DIR
+
 PACKAGE_DIR = lambda pkg_name: '{}{}'.format(DB_DIR, pkg_name)
 METADATA_FILE = lambda pkg_name: '{}/metadata.json'.format(PACKAGE_DIR(pkg_name))
 
@@ -50,3 +51,5 @@ def mark_as_uninstalled(package_name):
     metadata.pop('installed', None)
     rewrite_metadata(package_name, metadata)
 
+if __name__ == "__main__":
+    mark_as_installed("example", "2.4")
