@@ -15,6 +15,20 @@ Parameters:
     Default: nobody@amazon.com
     Type: String
 
+  QueueToCompileName:
+    Description: Name of the SQS Queue to compile. Must be the same in the code of the Lambda and in the Gentoo AMI
+    Default: QueueToCompile
+    Type: String
+
+  S3BucketLambda:
+    Description: Name of the S3 bucket where the lambda code is stored
+    Default: pacloud
+    Type: String
+
+  S3KeyLambdaPackageRequest:
+    Description: Path in the S3 bucket where the lambda code for PackageRequest is stored
+    Default: Lambda/PackageRequest.zip
+    Type: String
 
 # Mappings:
 
@@ -25,18 +39,8 @@ Resources:
     Type: 'AWS::Lambda::Function'
     Properties:
       Code:
-        ZipFile: !Join 
-          - |+
-          
-          - - '''use strict'';'
-            - ''
-            - // PackageRequest Package Lambda
-            - 'exports.lambda_handler = (event, context, callback) => {'
-            - '  console.log(''Event:'', JSON.stringify(event));'
-            - '  const name = event.name || ''NONE'';'
-            - '  const response = {response: `You requested the package ${name}`};'
-            - '  callback(null, response);'
-            - '};'
+        S3Bucket: !Ref S3BucketLambda
+        S3Key: !Ref S3KeyLambdaPackageRequest
       Description: Check if a package is already compiled. If yes, return the URL, if no, request to compile it
       FunctionName: LambdaPackageRequest
       Handler: index.lambda_handler
@@ -95,7 +99,6 @@ Resources:
           
           - - '''use strict'';'
             - ''
-            - // PackageRequest Package Lambda
             - 'exports.lambda_handler = (event, context, callback) => {'
             - '  console.log(''Event:'', JSON.stringify(event));'
             - '  const response = {response: `Here is the list of all the packages and versions`};'
@@ -320,6 +323,7 @@ Resources:
   QueueToCompile: 
     Type: "AWS::SQS::Queue"
     Properties: 
+      QueueName: !Ref QueueToCompileName
       MaximumMessageSize: 1024
       MessageRetentionPeriod: 345600
       VisibilityTimeout: 7200
@@ -456,3 +460,7 @@ Outputs:
   AlarmEmail:
     Value: !Ref AlarmEmail
     Description: Email address to notify if operational problems arise
+
+  QueueToCompileName:
+    Value: !Ref QueueToCompileName
+    Description: Name of the SQS queue that get the compilation requests

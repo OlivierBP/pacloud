@@ -106,19 +106,19 @@ Resources:
   Serverless:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3-eu-west-1.amazonaws.com/pacloud/Serverless.yaml
+      TemplateURL: https://s3-eu-west-1.amazonaws.com/pacloud/CloudFormation/Serverless.yaml
       Parameters:
         AlarmEmail: !Ref AlarmEmail
           
   Network:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3-eu-west-1.amazonaws.com/pacloud/Network.yaml
+      TemplateURL: https://s3-eu-west-1.amazonaws.com/pacloud/CloudFormation/Network.yaml
 
   Ec2:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3-eu-west-1.amazonaws.com/pacloud/Ec2.yaml
+      TemplateURL: https://s3-eu-west-1.amazonaws.com/pacloud/CloudFormation/Ec2.yaml
       Parameters:
         Ec2SpotFleetTargetCapacity: !Ref Ec2SpotFleetTargetCapacity
         SpotFleetEc2InstanceType: !Ref SpotFleetEc2InstanceType
