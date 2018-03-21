@@ -34,10 +34,9 @@ def search(arg):
         return
     print("Results for search key: {}".format(arg))
     for package in results:
-        print()
-        firstline = "\033[1m" + package['name'] + "\033[0m\033[36m ("
+        firstline = "\n\033[1m{}\033[0;36m (".format(package['name'])
         for version in package['versions']:
-            firstline += " " + version['number'] + " "
+            firstline += " {} ".format(version['number'])
         firstline += ")\033[0m "
         try:
             firstline += "\033[32m[installed: {}]\033[0m".format(package['installed'])

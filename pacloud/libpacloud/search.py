@@ -1,9 +1,6 @@
 #!/bin/python3
 
 from libpacloud.database import list_packages, info_package
-import json
-import argparse
-
 
 def search(package_name):
     package_names = list_packages()
@@ -13,6 +10,5 @@ def search(package_name):
         if package_name in name:
             package_data = info_package(name)
             corresponding_packages.append(package_data)
-            #json.dump(package_data)
     return corresponding_packages
 
