@@ -2,7 +2,6 @@
 
 import os
 import json
-import re
 
 from libpacloud.config import DB_DIR
 
@@ -10,24 +9,20 @@ PACKAGE_DIR = lambda pkg_name: '{}{}'.format(DB_DIR, pkg_name)
 METADATA_FILE = lambda pkg_name: '{}/metadata.json'.format(PACKAGE_DIR(pkg_name))
 
 def list_packages():
-    packages = os.listdir(DB_DIR)
-    return packages
+    return os.listdir(DB_DIR)
 
 def info_package(package_name):
-    metadata_file = open(METADATA_FILE(package_name), 'r')
-    data = json.load(metadata_file)
-    metadata_file.close()
-    return data
+    return json.load(open(METADATA_FILE(package_name), 'r'))
 
 # Just a helper function to rewrite a package metadata, not to be called by other modules.
-def rewrite_metadata(package_name, metadata):
+def _rewrite_metadata(package_name, metadata):
     metadata_file = open(METADATA_FILE(package_name), 'w+')
     metadata_file.write(json.dumps(metadata))
     metadata_file.close()
 
 def add_package(package_name, metadata):
     os.makedirs(PACKAGE_DIR(package_name))
-    rewrite_metadata(package_name, metadata)
+    _rewrite_metadata(package_name, metadata)
 
 def remove_package(package_name):
     files = os.listdir(PACKAGE_DIR(package_name))
@@ -40,7 +35,7 @@ def modify_package(package_name, new_metadata):
     # Updating the database doesn't have to change the state of installed packages
     if('installed' in current_metadata):
         new_metadata['installed'] = current_metadata['installed']
-    rewrite_metadata(package_name, new_metadata)
+    _rewrite_metadata(package_name, new_metadata)
 
 def mark_as_installed(package_name, version):
     metadata = info_package(package_name)
@@ -49,8 +44,8 @@ def mark_as_installed(package_name, version):
         if(available_version['number'] == version):
             for dependency in available_version['dependencies']:
                 dependency_name = dependency[:max(-1,min(dependency.find('>'), dependency.find('=')))]
-                mark_as_required_by(dependency_name, package_name)
-    rewrite_metadata(package_name, metadata)
+                _mark_as_required_by(dependency_name, package_name)
+    _rewrite_metadata(package_name, metadata)
 
 
 def mark_as_uninstalled(package_name):
@@ -59,11 +54,11 @@ def mark_as_uninstalled(package_name):
         if(available_version['number'] == metadata['installed']):
             for dependency in available_version['dependencies']:
                 dependency_name = dependency[:max(-1,min(dependency.find('>'), dependency.find('=')))]
-                remove_required_by(dependency_name, package_name)
+                _remove_required_by(dependency_name, package_name)
     metadata.pop('installed', None)
-    rewrite_metadata(package_name, metadata)
+    _rewrite_metadata(package_name, metadata)
 
-def mark_as_required_by(package_name, required_by):
+def _mark_as_required_by(package_name, required_by):
     metadata = info_package(package_name)
     try:
         if(not required_by in metadata['required_by']):
@@ -71,10 +66,10 @@ def mark_as_required_by(package_name, required_by):
     except KeyError:
         metadata['required_by'] = []
         metadata['required_by'].append(required_by)
-    rewrite_metadata(package_name, metadata)
+    _rewrite_metadata(package_name, metadata)
 
-def remove_required_by(package_name, required_by):
+def _remove_required_by(package_name, required_by):
     metadata = info_package(package_name)
     metadata['required_by'].remove(required_by)
-    rewrite_metadata(package_name, metadata)
+    _rewrite_metadata(package_name, metadata)
 
