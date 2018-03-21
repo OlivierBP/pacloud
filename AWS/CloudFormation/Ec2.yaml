@@ -101,6 +101,7 @@ Resources:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
@@ -108,51 +109,47 @@ Resources:
                 - spotfleet.amazonaws.com
             Action:
               - 'sts:AssumeRole'
-      Path: /
-
-  PacloudEc2SpotFleetRolePolicies:
-    Type: 'AWS::IAM::Policy'
-    Properties:
-      PolicyName: PacloudEc2SpotFleetRolePolicy 
-      PolicyDocument:
-        Statement:
-          - Effect: Allow
-            Action:
-              - 'ec2:DescribeImages'
-              - 'ec2:DescribeSubnets'
-              - 'ec2:RequestSpotInstances'
-              - 'ec2:DescribeInstanceStatus'
-            Resource:
-              - '*'
-          - Effect: Allow
-            Action:
-              - 'iam:PassRole'
-            Resource:
-              - '*'
-            Condition:
-              StringEquals:
-                'iam:PassedToService':
-                  - ec2.amazonaws.com
-                  - ec2.amazonaws.com.cn
-          - Effect: Allow
-            Action:
-              - 'ec2:CreateTags'
-            Resource:
-              - 'arn:aws:ec2:*:*:instance/*'
-              - 'arn:aws:ec2:*:*:spot-instances-request/*'
-            Condition:
-              'ForAllValues:StringEquals':
-                'aws:TagKeys':
-                  - 'aws:ec2spot:fleet-request-id'
-          - Effect: Allow
-            Action:
-              - 'ec2:TerminateInstances'
-            Resource: '*'
-            Condition:
-              StringLike:
-                'ec2:ResourceTag/aws:ec2spot:fleet-request-id': '*'
-      Roles:
-        - !Ref PacloudEc2SpotFleetRole
+      Policies:
+        - 
+          PolicyName: PacloudEc2SpotFleetRolePolicy 
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ec2:DescribeImages'
+                  - 'ec2:DescribeSubnets'
+                  - 'ec2:RequestSpotInstances'
+                  - 'ec2:DescribeInstanceStatus'
+                Resource:
+                  - '*'
+              - Effect: Allow
+                Action:
+                  - 'iam:PassRole'
+                Resource:
+                  - '*'
+                Condition:
+                  StringEquals:
+                    'iam:PassedToService':
+                      - ec2.amazonaws.com
+                      - ec2.amazonaws.com.cn
+              - Effect: Allow
+                Action:
+                  - 'ec2:CreateTags'
+                Resource:
+                  - 'arn:aws:ec2:*:*:instance/*'
+                  - 'arn:aws:ec2:*:*:spot-instances-request/*'
+                Condition:
+                  'ForAllValues:StringEquals':
+                    'aws:TagKeys':
+                      - 'aws:ec2spot:fleet-request-id'
+              - Effect: Allow
+                Action:
+                  - 'ec2:TerminateInstances'
+                Resource: '*'
+                Condition:
+                  StringLike:
+                    'ec2:ResourceTag/aws:ec2spot:fleet-request-id': '*'
 
   
 

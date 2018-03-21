@@ -31,7 +31,7 @@ Resources:
           - - '''use strict'';'
             - ''
             - // PackageRequest Package Lambda
-            - 'exports.handler = (event, context, callback) => {'
+            - 'exports.lambda_handler = (event, context, callback) => {'
             - '  console.log(''Event:'', JSON.stringify(event));'
             - '  const name = event.name || ''NONE'';'
             - '  const response = {response: `You requested the package ${name}`};'
@@ -39,7 +39,7 @@ Resources:
             - '};'
       Description: Check if a package is already compiled. If yes, return the URL, if no, request to compile it
       FunctionName: LambdaPackageRequest
-      Handler: index.handler
+      Handler: index.lambda_handler
       Role: !GetAtt 
         - LambdaPackageRequestRole
         - Arn
@@ -64,6 +64,25 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - 'sts:AssumeRole'
+      Policies: 
+        - 
+          PolicyName: PutInQueueToCompile
+          PolicyDocument: 
+            Version: 2012-10-17
+            Statement: 
+              - 
+                Effect: Allow
+                Action: 
+                  - sqs:SendMessage
+                  - sqs:GetQueueUrl
+                Resource: !GetAtt QueueToCompile.Arn
+
+  LambdaPackageRequestRoleInstanceProfile: 
+    Type: "AWS::IAM::InstanceProfile"
+    Properties: 
+      Path: "/"
+      Roles: 
+        - !Ref LambdaPackageRequestRole
 
 
   ################## LAMBDA SYNC CLIENT DB ##################
@@ -77,14 +96,14 @@ Resources:
           - - '''use strict'';'
             - ''
             - // PackageRequest Package Lambda
-            - 'exports.handler = (event, context, callback) => {'
+            - 'exports.lambda_handler = (event, context, callback) => {'
             - '  console.log(''Event:'', JSON.stringify(event));'
             - '  const response = {response: `Here is the list of all the packages and versions`};'
             - '  callback(null, response);'
             - '};'
       Description: Return the list of all the packages and versions
       FunctionName: LambdaSyncClientDb
-      Handler: index.handler
+      Handler: index.lambda_handler
       Role: !GetAtt 
         - LambdaSyncClientDbRole
         - Arn

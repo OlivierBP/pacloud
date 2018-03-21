@@ -145,10 +145,10 @@ Outputs:
     Value: !GetAtt Serverless.Outputs.ApiSyncClientDbUrl
 
   BucketStorage:
-    Value: !GetAtt Serverless.Outputs.S3BucketPacloud
+    Value: !GetAtt Serverless.Outputs.BucketStorage
     Description: Bucket to store the packages and any public data
   BucketLogging:
-    Value: !GetAtt Serverless.Outputs.S3BucketPacloudLogging
+    Value: !GetAtt Serverless.Outputs.BucketLogging
     Description: Bucket to store the logging for Pacloud
 
   AlarmEmail:
