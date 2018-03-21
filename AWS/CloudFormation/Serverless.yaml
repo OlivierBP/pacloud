@@ -43,7 +43,7 @@ Resources:
         S3Key: !Ref S3KeyLambdaPackageRequest
       Description: Check if a package is already compiled. If yes, return the URL, if no, request to compile it
       FunctionName: LambdaPackageRequest
-      Handler: index.lambda_handler
+      Handler: PackageRequest.lambda_handler
       Role: !GetAtt 
         - LambdaPackageRequestRole
         - Arn
