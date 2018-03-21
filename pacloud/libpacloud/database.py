@@ -66,7 +66,8 @@ def mark_as_uninstalled(package_name):
 def mark_as_required_by(package_name, required_by):
     metadata = info_package(package_name)
     try:
-        metadata['required_by'].append(required_by)
+        if(not required_by in metadata['required_by']):
+            metadata['required_by'].append(required_by)
     except KeyError:
         metadata['required_by'] = []
         metadata['required_by'].append(required_by)
@@ -77,5 +78,3 @@ def remove_required_by(package_name, required_by):
     metadata['required_by'].remove(required_by)
     rewrite_metadata(package_name, metadata)
 
-if __name__ == "__main__":
-    mark_as_uninstalled("example")
