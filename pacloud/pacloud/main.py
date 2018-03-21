@@ -2,6 +2,7 @@
 
 import argparse
 import libpacloud
+import json
 
 def main():
     parser = argparse.ArgumentParser()
@@ -17,9 +18,30 @@ def main():
     args = parser.parse_args()
     args_dict = dict((k,v) for k,v in args.__dict__.items() if v is not None and v is not False)
     for (name, arg) in args_dict.items():
-        func = getattr(libpacloud, name)
-        if (arg):
-            print(func(arg))
+        if name == "search":
+            search(arg)
         else:
-            func()
+            func = getattr(libpacloud, name)
+            if (arg):
+                print(func(arg))
+            else:
+                func()
 
+def search(arg):
+    results = libpacloud.search(arg)
+    if not results:
+        print("No result found for search key: {}".format(arg))
+        return
+    print("Results for search key: {}".format(arg))
+    for package in results:
+        print()
+        firstline = "\033[1m" + package['name'] + "\033[0m\033[36m ("
+        for version in package['versions']:
+            firstline += " " + version['number'] + " "
+        firstline += ")\033[0m "
+        try:
+            firstline += "\033[32m[installed: {}]\033[0m".format(package['installed'])
+        except KeyError:
+            pass
+        print(firstline)
+        print("\t"+package["description"])
