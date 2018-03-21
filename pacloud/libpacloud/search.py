@@ -1,28 +1,18 @@
 #!/bin/python3
 
-import list_packages
-import info_packages
+from libpacloud.database import list_packages, info_package
 import json
 import argparse
 
 
-def search(name):
+def search(package_name):
     package_names = list_packages()
-    corresponding_packages = {}
+    corresponding_packages = []
 
     for name in package_names:
-        if packet_name in name:
-            corresponding_packages.append(name)
-            package_data = info_packages()
-            json.dump(package_data)
+        if package_name in name:
+            package_data = info_package(name)
+            corresponding_packages.append(package_data)
+            #json.dump(package_data)
     return corresponding_packages
 
-
-def main():
-    parser = argparse.ArgumentParser()
-    args = parser.parse_args()
-    packet_name = args.name
-
-
-if __name__ == '__main__':
-    main()

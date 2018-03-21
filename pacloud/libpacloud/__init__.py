@@ -1,3 +1,3 @@
 #!/usr/bin/python
 
-from .update import *
+from .search import search

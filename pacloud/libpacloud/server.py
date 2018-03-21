@@ -9,7 +9,7 @@ def get_package_url(package_name, version):
 
 def download_package(package_name, version):
     url = get_package_url(package_name, version)
-    urllib.request.urlretrieve(url, '{}/{}/{}-{}.tar.gz'.format(DB_DIR, package_name, package_name, version))
+    urllib.request.urlretrieve(url, '{}/{}/{}-{}.tar.gz'.format(DB_DIR, package_name, version))
 
 if __name__ == "__main__":
     download_package("example", "2.4")
