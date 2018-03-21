@@ -18,5 +18,8 @@ def main():
     args_dict = dict((k,v) for k,v in args.__dict__.items() if v is not None and v is not False)
     for (name, arg) in args_dict.items():
         func = getattr(libpacloud, name)
-        func()
+        if (arg):
+            print(func(arg))
+        else:
+            func()
 

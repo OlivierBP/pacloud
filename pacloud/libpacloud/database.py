@@ -2,8 +2,9 @@
 
 import os
 import json
+import re
 
-from config import DB_DIR
+from libpacloud.config import DB_DIR
 
 PACKAGE_DIR = lambda pkg_name: '{}{}'.format(DB_DIR, pkg_name)
 METADATA_FILE = lambda pkg_name: '{}/metadata.json'.format(PACKAGE_DIR(pkg_name))
@@ -44,12 +45,37 @@ def modify_package(package_name, new_metadata):
 def mark_as_installed(package_name, version):
     metadata = info_package(package_name)
     metadata['installed'] = version
+    for available_version in metadata['versions']:
+        if(available_version['number'] == version):
+            for dependency in available_version['dependencies']:
+                dependency_name = dependency[:max(-1,min(dependency.find('>'), dependency.find('=')))]
+                mark_as_required_by(dependency_name, package_name)
     rewrite_metadata(package_name, metadata)
+
 
 def mark_as_uninstalled(package_name):
     metadata = info_package(package_name)
+    for available_version in metadata['versions']:
+        if(available_version['number'] == metadata['installed']):
+            for dependency in available_version['dependencies']:
+                dependency_name = dependency[:max(-1,min(dependency.find('>'), dependency.find('=')))]
+                remove_required_by(dependency_name, package_name)
     metadata.pop('installed', None)
     rewrite_metadata(package_name, metadata)
 
+def mark_as_required_by(package_name, required_by):
+    metadata = info_package(package_name)
+    try:
+        metadata['required_by'].append(required_by)
+    except KeyError:
+        metadata['required_by'] = []
+        metadata['required_by'].append(required_by)
+    rewrite_metadata(package_name, metadata)
+
+def remove_required_by(package_name, required_by):
+    metadata = info_package(package_name)
+    metadata['required_by'].remove(required_by)
+    rewrite_metadata(package_name, metadata)
+
 if __name__ == "__main__":
-    mark_as_installed("example", "2.4")
+    mark_as_uninstalled("example")
