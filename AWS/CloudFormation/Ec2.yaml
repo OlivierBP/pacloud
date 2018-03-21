@@ -66,6 +66,10 @@ Parameters:
     Type: String
   PrivateSubnetPacloudSpotFleet3:
     Type: String
+  BucketStorageArn:
+    Type: String
+  QueueToCompileArn:
+    Type: String
 
 
 
@@ -96,6 +100,51 @@ Mappings:
 
 
 Resources:
+  ################## EC2 BASTION SERVER ##################
+  # Security group fot the bastion server
+  SgPacloudBastionServer:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: pacloud-bastionserver-sg
+      GroupName: pacloud-bastionserver-sg
+      VpcId: !Ref VpcPacloudSpotFleet
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: pacloud-bastionserver-sg
+
+  # Bastion server
+  BastionServer: 
+    Type: "AWS::EC2::Instance"
+    Properties:
+      InstanceType: !Ref BastionServerInstanceType
+      ImageId: 
+        Fn::FindInMap: 
+          - BastionInstanceRegionArch2AMI
+          - !Ref "AWS::Region"
+          - Fn::FindInMap:
+              - BastionInstanceType2Arch
+              - !Ref BastionServerInstanceType
+              - Arch
+      KeyName: !Ref KeyPairBastionServer
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeleteOnTermination: true
+          DeviceIndex: 0
+          GroupSet: 
+            - !Ref SgPacloudBastionServer
+          SubnetId: !Ref PublicSubnetPacloud
+      Tags:
+      - Key: Project
+        Value: Pacloud
+      - Key: Name
+        Value: BastionServer
+
+
   ################## EC2 SPOT FLEET ##################
   PacloudEc2SpotFleetRole:
     Type: 'AWS::IAM::Role'
@@ -151,50 +200,44 @@ Resources:
                   StringLike:
                     'ec2:ResourceTag/aws:ec2spot:fleet-request-id': '*'
 
-  
-
-  # Security group fot the bastion server
-  SgPacloudBastionServer:
-    Type: 'AWS::EC2::SecurityGroup'
+  PacloudEc2WorkerRole:
+    Type: 'AWS::IAM::Role'
     Properties:
-      GroupDescription: pacloud-bastionserver-sg
-      GroupName: pacloud-bastionserver-sg
-      VpcId: !Ref VpcPacloudSpotFleet
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: '22'
-          ToPort: '22'
-          CidrIp: 0.0.0.0/0
-      Tags:
-        - Key: Name
-          Value: pacloud-bastionserver-sg
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: S3PusherPacloudPackages
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:List*'
+                  - 's3:Get*'
+                  - 's3:PutObject'
+                Resource: !Ref BucketStorageArn
+        - PolicyName: QueueToCompileEc2Worker
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sqs:ChangeMessageVisibility'
+                  - 'sqs:DeleteMessage'
+                  - 'sqs:GetQueueUrl'
+                  - 'sqs:ReceiveMessage'
+                Resource: !Ref QueueToCompileArn
 
-  # Bastion server
-  BastionServer: 
-    Type: "AWS::EC2::Instance"
-    Properties:
-      InstanceType: !Ref BastionServerInstanceType
-      ImageId: 
-        Fn::FindInMap: 
-          - BastionInstanceRegionArch2AMI
-          - !Ref "AWS::Region"
-          - Fn::FindInMap:
-              - BastionInstanceType2Arch
-              - !Ref BastionServerInstanceType
-              - Arch
-      KeyName: !Ref KeyPairBastionServer
-      NetworkInterfaces:
-        - AssociatePublicIpAddress: true
-          DeleteOnTermination: true
-          DeviceIndex: 0
-          GroupSet: 
-            - !Ref SgPacloudBastionServer
-          SubnetId: !Ref PublicSubnetPacloud
-      Tags:
-      - Key: Project
-        Value: Pacloud
-      - Key: Name
-        Value: BastionServer
+  PacloudEc2WorkerInstanceProfile: 
+    Type: "AWS::IAM::InstanceProfile"
+    Properties: 
+      Roles: 
+        - !Ref PacloudEc2WorkerRole
 
   # Security group for the spot instances: accept only ssh connections from the bastion server
   SgPacloudSpotFleet:
@@ -228,7 +271,13 @@ Resources:
         LaunchSpecifications:
 
         - EbsOptimized: 'false'
+          IamInstanceProfile: 
+            Arn: !GetAtt PacloudEc2WorkerInstanceProfile.Arn
           # IamInstanceProfile: 
+          #   Arn: 
+          #     Fn::GetAtt:
+          #     - PacloudEc2WorkerInstanceProfile
+          #     - Arn
           ImageId:
             Fn::FindInMap:
             - SpotInstanceRegionArch2AMI

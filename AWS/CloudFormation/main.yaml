@@ -132,6 +132,9 @@ Resources:
         PrivateSubnetPacloudSpotFleet1: !GetAtt Network.Outputs.PrivateSubnetPacloudSpotFleet1
         PrivateSubnetPacloudSpotFleet2: !GetAtt Network.Outputs.PrivateSubnetPacloudSpotFleet2
         PrivateSubnetPacloudSpotFleet3: !GetAtt Network.Outputs.PrivateSubnetPacloudSpotFleet3
+        # Parameters from Serverless
+        BucketStorageArn: !GetAtt Serverless.Outputs.BucketStorageArn
+        QueueToCompileArn: !GetAtt Serverless.Outputs.QueueToCompileArn
 
 
 

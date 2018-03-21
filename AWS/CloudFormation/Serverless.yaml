@@ -450,6 +450,9 @@ Outputs:
   BucketStorage:
     Value: !Ref S3BucketPacloud
     Description: Bucket to store the packages and any public data
+  BucketStorageArn:
+    Value: !GetAtt S3BucketPacloud.Arn
+    Description: ARN of BucketStorage
   BucketLogging:
     Value: !Ref S3BucketPacloudLogging
     Description: Bucket to store the logging for Pacloud
@@ -461,3 +464,6 @@ Outputs:
   QueueToCompileName:
     Value: !Ref QueueToCompileName
     Description: Name of the SQS queue that get the compilation requests
+  QueueToCompileArn:
+    Value: !GetAtt QueueToCompile.Arn
+    Description: ARN of QueueToCompile

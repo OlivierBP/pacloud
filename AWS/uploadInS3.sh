@@ -48,7 +48,7 @@ fi
 
 
 # Put in the clip board the path to the main.yaml
-echo https://s3-eu-west-1.amazonaws.com/pacloud/CloudFormation/main.yaml | xclip
+echo https://s3-eu-west-1.amazonaws.com/pacloud/CloudFormation/main.yaml | xclip -selection clipboard
 
 echo "Done"
 
