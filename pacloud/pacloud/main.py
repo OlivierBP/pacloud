@@ -2,7 +2,6 @@
 
 import argparse
 import libpacloud
-import json
 
 def main():
     parser = argparse.ArgumentParser()
@@ -20,6 +19,10 @@ def main():
     for (name, arg) in args_dict.items():
         if name == "search":
             search(arg)
+        elif name == "update":
+            update()
+        elif name == "install":
+            install(arg)
         else:
             func = getattr(libpacloud, name)
             if (arg):
@@ -44,3 +47,18 @@ def search(arg):
             pass
         print(firstline)
         print("\t"+package["description"])
+
+def update():
+    print('update...')
+    print(libpacloud.update())
+
+def install(arg):
+    print("Resolving dependencies...\n")
+    dependencies_list = libpacloud.list_dependencies(arg)
+    strdep = "Packages ({}):".format(len(dependencies_list))
+    for dependency in dependencies_list:
+        strdep += " {} ".format(dependency)
+    print(strdep +"\n")
+    print("Do you want to proceed with installation? [Y/n]")
+    for package in dependencies_list:
+        libpacloud.install(package, "2.23.2")
