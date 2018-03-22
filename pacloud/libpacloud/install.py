@@ -38,5 +38,5 @@ def install(package_name, version):
         os.makedirs(path,exist_ok = True)
 """
     distutils.dir_util.copy_tree('/tmp/{}'.format(package_name),'/') 
-    return True
+    db.mark_as_installed(package_name, version)
 
