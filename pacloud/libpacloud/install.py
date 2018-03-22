@@ -5,6 +5,7 @@ from database import list_packages
 import urllib.request
 import os
 import zipfile
+import shutil
 
 
 list = []
@@ -32,8 +33,9 @@ def install(package_name, version):
     path = os.abspath(zip)
 
     if not os.path.exists(path):
-        os.makedirs(exist_ok = True)
+        os.makedirs(path,exist_ok = True)
 
+    distutils.dir_util.copy_tree(zip,path) 
     return True
 
 
