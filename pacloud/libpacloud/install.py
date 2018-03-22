@@ -37,6 +37,6 @@ def install(package_name, version):
     if not os.path.exists(path):
         os.makedirs(path,exist_ok = True)
 """
-    distutils.dir_util.copy_tree('/tmp/{}'.format(package_name),path) 
+    distutils.dir_util.copy_tree('/tmp/{}'.format(package_name),'/') 
     return True
 
