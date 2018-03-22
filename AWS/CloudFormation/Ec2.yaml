@@ -87,7 +87,8 @@ Mappings:
       Arch: '64'
   SpotInstanceRegionArch2AMI:
     eu-west-1:
-      '64': ami-e795dd9e
+      '64': ami-2a662e53
+      # '64': ami-e795dd9e
 
   BastionInstanceType2Arch:
     t2.micro:
@@ -273,11 +274,6 @@ Resources:
         - EbsOptimized: 'false'
           IamInstanceProfile: 
             Arn: !GetAtt PacloudEc2WorkerInstanceProfile.Arn
-          # IamInstanceProfile: 
-          #   Arn: 
-          #     Fn::GetAtt:
-          #     - PacloudEc2WorkerInstanceProfile
-          #     - Arn
           ImageId:
             Fn::FindInMap:
             - SpotInstanceRegionArch2AMI

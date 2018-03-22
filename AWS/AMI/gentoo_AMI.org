@@ -79,6 +79,7 @@ cat /sys/power/disk
 * tmux
 * app-text/tree
 * app-misc/ranger
+* dev-python/pip
 
 
 
