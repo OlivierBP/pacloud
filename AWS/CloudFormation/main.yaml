@@ -10,11 +10,6 @@ Description: >-
 
 
 Parameters:
-  AlarmEmail: 
-    Description: Email address to notify if operational problems arise
-    Default: nobody@amazon.com
-    Type: String
-
   Ec2SpotFleetTargetCapacity:
     Description: Target capacity for the EC2 spot fleet
     Default: 1
@@ -78,10 +73,6 @@ Metadata:
         Parameters: 
           - BastionServerInstanceType
           - KeyPairBastionServer
-      - Label: 
-          default: Alarm configuration
-        Parameters: 
-          - AlarmEmail
     ParameterLabels: 
       SpotFleetEc2InstanceType: 
         default: Instance type
@@ -89,8 +80,6 @@ Metadata:
         default: Number of instances
       KeyPairSpotFleet: 
         default: KeyPair
-      AlarmEmail: 
-        default: E-mail
       BastionServerInstanceType:
         default: Instance type
       KeyPairBastionServer: 
@@ -107,8 +96,6 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: https://s3-eu-west-1.amazonaws.com/pacloud/CloudFormation/Serverless.yaml
-      Parameters:
-        AlarmEmail: !Ref AlarmEmail
           
   Network:
     Type: AWS::CloudFormation::Stack
@@ -133,7 +120,7 @@ Resources:
         PrivateSubnetPacloudSpotFleet2: !GetAtt Network.Outputs.PrivateSubnetPacloudSpotFleet2
         PrivateSubnetPacloudSpotFleet3: !GetAtt Network.Outputs.PrivateSubnetPacloudSpotFleet3
         # Parameters from Serverless
-        BucketStorageArn: !GetAtt Serverless.Outputs.BucketStorageArn
+        BucketStorageArn: !ImportValue PacloudBucketPackagesArn
         QueueToCompileArn: !GetAtt Serverless.Outputs.QueueToCompileArn
 
 
@@ -148,12 +135,8 @@ Outputs:
     Value: !GetAtt Serverless.Outputs.ApiSyncClientDbUrl
 
   BucketStorage:
-    Value: !GetAtt Serverless.Outputs.BucketStorage
+    Value: !ImportValue PacloudBucketPackagesName
     Description: Bucket to store the packages and any public data
   BucketLogging:
-    Value: !GetAtt Serverless.Outputs.BucketLogging
+    Value: !ImportValue PacloudBucketLoggingName
     Description: Bucket to store the logging for Pacloud
-
-  AlarmEmail:
-    Value: !GetAtt Serverless.Outputs.AlarmEmail
-    Description: Email address to notify if operational problems arise

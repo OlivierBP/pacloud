@@ -1,0 +1,108 @@
+# Pacloud project
+# S3Bucket
+# https://github.com/OlivierBP/Pacloud
+# Created 2018-03-23 by BAL-PETRE Olivier
+# License MIT 
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Creation of the S3 buckets for Pacloud (S3, SNS)
+
+
+Parameters:
+  AlarmEmail: 
+    Description: Email address to notify if operational problems arise
+    Default: nobody@amazon.com
+    Type: String
+
+  BucketPackagesName:
+    Description: Name of the package that store the packages for Pacloud
+    Default: pacloud-packages-bucket
+    Type: String
+
+  BucketLoggingName:
+    Description: Name of the package that store the logging for Pacloud
+    Default: pacloud-logging-bucket
+    Type: String
+
+
+Resources:
+  ################## SNS ##################
+  AlarmTopic: 
+    Type: "AWS::SNS::Topic"
+    Properties: 
+      Subscription: 
+        - 
+          Endpoint: !Ref "AlarmEmail"
+          Protocol: "email"
+
+
+  ################## S3 ##################
+  # S3 bucket to store the packages
+  # Alarm with SNS if all replicas are lost for an object
+  # Encrypted with Amazon S3-managed keys SSE-S3
+  S3BucketPacloud:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketPackagesName
+      AccessControl: PublicRead
+      LoggingConfiguration:
+        DestinationBucketName: !Ref 'S3BucketPacloudLogging'
+        LogFilePrefix: logs
+      NotificationConfiguration:
+        TopicConfigurations:
+        - Topic: !Ref AlarmTopic
+          Event: s3:ReducedRedundancyLostObject
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  # Encrypted with Amazon S3-managed keys SSE-S3
+  # LifeCycle: After 150 days, move the log file to the glacier
+  S3BucketPacloudLogging:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketLoggingName
+      AccessControl: LogDeliveryWrite
+      LifecycleConfiguration:
+        Rules:
+        - Id: GlacierRule
+          Status: Enabled
+          Transitions:
+            - TransitionInDays: '150'
+              StorageClass: Glacier
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+
+Outputs:
+  BucketStorage:
+    Value: !Ref S3BucketPacloud
+    Description: Bucket to store the packages and any public data
+    Export:
+      Name: PacloudBucketPackagesName
+
+  BucketStorageArn:
+    Value: !GetAtt S3BucketPacloud.Arn
+    Description: ARN of BucketStorage
+    Export:
+      Name: PacloudBucketPackagesArn
+
+  BucketLogging:
+    Value: !Ref S3BucketPacloudLogging
+    Description: Bucket to store the logging for Pacloud
+    Export:
+      Name: PacloudBucketLoggingName
+
+  BucketLoggingArn:
+    Value: !GetAtt S3BucketPacloudLogging.Arn
+    Description: Bucket to store the logging for Pacloud
+    Export:
+      Name: PacloudBucketLoggingArn
+
+  AlarmEmail:
+    Value: !Ref AlarmEmail
+    Description: Email address to notify if operational problems arise
