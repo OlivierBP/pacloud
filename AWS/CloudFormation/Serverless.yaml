@@ -389,30 +389,6 @@ Resources:
 
 
 
-  ################## CLOUDFRONT ##################
-# CloudFrontDistribution:
-#     Type: 'AWS::CloudFront::Distribution'
-#     Properties:
-#       DistributionConfig:
-#         Enabled: true
-#         HttpVersion: http2
-#         Logging: true
-#         DefaultCacheBehavior:
-#           LambdaFunctionAssociations:
-#             - EventType: string-value
-#               LambdaFunctionARN: string-value
-#         IPV6Enabled: true
-#         Origins:
-#           - CustomOriginConfig:
-#               OriginKeepaliveTimeout: integer-value
-#               OriginReadTimeout: integer-value
-#       Tags:
-#         - Key: Project
-#           Value: Pacloud
-
-# DefaultRootObject
-
-
 
 
 

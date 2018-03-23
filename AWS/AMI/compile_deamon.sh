@@ -2,11 +2,13 @@
 
 # This script get a compilation request from the SQS queue, work on, upload the result in S3 and delete the task from the queue
 # Require "awscli"
+# Require "jq"
 
 # Install of "awscli" for gentoo:
 # emerge dev-python/pip
 # pip install pip --user
 # ./.local/bin/aws s3 ls (or add to the path)
+# Add to path: PATH=$PATH:/home/ec2-user/.local/bin
 # Need to set a region: aws configure set region eu-west-1
 
 # Name of the queue

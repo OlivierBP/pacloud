@@ -221,8 +221,11 @@ Resources:
                 Action:
                   - 's3:List*'
                   - 's3:Get*'
-                  - 's3:PutObject'
-                Resource: !Ref BucketStorageArn
+                  - 's3:Put*'
+                Resource: !Join
+                  - ''
+                  - - !Ref BucketStorageArn
+                    - /*
         - PolicyName: QueueToCompileEc2Worker
           PolicyDocument:
             Statement:
@@ -270,7 +273,6 @@ Resources:
         Type: maintain
         
         LaunchSpecifications:
-
         - EbsOptimized: 'false'
           IamInstanceProfile: 
             Arn: !GetAtt PacloudEc2WorkerInstanceProfile.Arn

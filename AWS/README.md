@@ -196,3 +196,7 @@ ssh -i ~/Bureau/KeyPair_Server1.pem -o ProxyCommand='ssh -i ~/Bureau/KeyPair_Ser
 
 Put all the templates in S3 (main.yaml doesn't need it) and deploy main.yaml
 It can be required to update the links in main.yaml to point to the S3 URL
+
+### Find the bandwidth of an instance
+* download speedtest-cli on gentoo
+* ```speedtest-cli```
