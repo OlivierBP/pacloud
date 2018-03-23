@@ -1,1 +1,1 @@
-{"name": "feh", "description": "Fast and light imlib2-based image viewer", "versions": [{"number": "2.23.2", "dependencies": []}]}
+{"name": "feh", "description": "Fast and light imlib2-based image viewer", "versions": [{"number": "2.25", "dependencies": ["imlib2"]}, {"number": "2.23.2", "dependencies": ["imlib2"]}], "installed": "2.25"}

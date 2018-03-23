@@ -1,6 +1,7 @@
 #!/bin/python3
 
 import libpacloud.database as db
+from libpacloud.server import download_package
 from libpacloud.config import DB_DIR
 import os
 import tarfile
@@ -27,8 +28,14 @@ def list_dependencies(package_name, version=None):
 
 
 
-def install(package_name, version):
-    tar = tarfile.open("{}/{}/{}-{}.tbz2".format(DB_DIR, package_name, package_name, version))
+def install(package_name, version=None):
+    if(version == None):
+        version = db.info_package(package_name)["versions"][0]["number"]
+    package_path = "{}/{}/{}-{}.tbz2".format(DB_DIR, package_name, package_name, version)
+    if(not os.path.isfile(package_path)):
+        print("Downloading {}-{}".format(package_name, version))
+        download_package(package_name, version)
+    tar = tarfile.open(package_path)
     tar.extractall('/tmp/{}'.format(package_name))
 
     """
@@ -37,6 +44,6 @@ def install(package_name, version):
     if not os.path.exists(path):
         os.makedirs(path,exist_ok = True)
 """
-    distutils.dir_util.copy_tree('/tmp/{}'.format(package_name),'/') 
+    distutils.dir_util.copy_tree('/tmp/{}'.format(package_name),'/')
     db.mark_as_installed(package_name, version)
 

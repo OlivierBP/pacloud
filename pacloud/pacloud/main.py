@@ -59,6 +59,15 @@ def install(arg):
     for dependency in dependencies_list:
         strdep += " {} ".format(dependency)
     print(strdep +"\n")
-    print("Do you want to proceed with installation? [Y/n]")
-    for package in dependencies_list:
-        libpacloud.install(package, "2.23.2")
+    if(_yesno("Do you want to proceed with installation? [Y/n] ")):
+        print("Installing packages...")
+        for package in dependencies_list:
+            print(package + "... ", end="")
+            libpacloud.install(package)
+            print("done!")
+        print("Done!")
+
+def _yesno(message):
+    user_choice = input(message)
+    return user_choice in ['', 'Y', 'y']
+
