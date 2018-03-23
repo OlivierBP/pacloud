@@ -15,7 +15,7 @@
 queueName=QueueToCompile
 
 # Bucket name
-bucketName=pacloud-serverless-s3m62kwuctt6-s3bucketpacloud-17f2h0ur4htqs
+bucketName=pacloud-packages-bucket
 
 
 # Get the queue URL

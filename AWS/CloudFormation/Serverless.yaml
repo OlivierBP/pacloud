@@ -6,14 +6,10 @@
 
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
-  Creation of the serverless part of the application (API Gateway, Lambda, SQS, S3)
+  Creation of the serverless part of the application (API Gateway, Lambda, SQS)
 
 
 Parameters:
-  AlarmEmail: 
-    Description: Email address to notify if operational problems arise
-    Default: nobody@amazon.com
-    Type: String
 
   QueueToCompileName:
     Description: Name of the SQS Queue to compile. Must be the same in the code of the Lambda and in the Gentoo AMI
@@ -339,55 +335,6 @@ Resources:
       MessageRetentionPeriod: 1209600
 
 
-  ################## SNS ##################
-  AlarmTopic: 
-    Type: "AWS::SNS::Topic"
-    Properties: 
-      Subscription: 
-        - 
-          Endpoint: !Ref "AlarmEmail"
-          Protocol: "email"
-
-
-  ################## S3 ##################
-  # S3 bucket to store the packages
-  # Alarm with SNS if all replicas are lost for an object
-  # Encrypted with Amazon S3-managed keys SSE-S3
-  S3BucketPacloud:
-    Type: AWS::S3::Bucket
-    Properties:
-      AccessControl: PublicRead
-      LoggingConfiguration:
-        DestinationBucketName: !Ref 'S3BucketPacloudLogging'
-        LogFilePrefix: logs
-      NotificationConfiguration:
-        TopicConfigurations:
-        - Topic: !Ref AlarmTopic
-          Event: s3:ReducedRedundancyLostObject
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-
-  # Encrypted with Amazon S3-managed keys SSE-S3
-  # LifeCycle: After 150 days, move the log file to the glacier
-  S3BucketPacloudLogging:
-    Type: AWS::S3::Bucket
-    Properties:
-      AccessControl: LogDeliveryWrite
-      LifecycleConfiguration:
-        Rules:
-        - Id: GlacierRule
-          Status: Enabled
-          Transitions:
-            - TransitionInDays: '150'
-              StorageClass: Glacier
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-
-
 
 
 
@@ -422,20 +369,6 @@ Outputs:
         - !Ref 'AWS::Region'
         - .amazonaws.com
         - /LATEST/sync
-
-  BucketStorage:
-    Value: !Ref S3BucketPacloud
-    Description: Bucket to store the packages and any public data
-  BucketStorageArn:
-    Value: !GetAtt S3BucketPacloud.Arn
-    Description: ARN of BucketStorage
-  BucketLogging:
-    Value: !Ref S3BucketPacloudLogging
-    Description: Bucket to store the logging for Pacloud
-
-  AlarmEmail:
-    Value: !Ref AlarmEmail
-    Description: Email address to notify if operational problems arise
 
   QueueToCompileName:
     Value: !Ref QueueToCompileName
