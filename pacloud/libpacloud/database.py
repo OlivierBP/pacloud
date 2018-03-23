@@ -24,6 +24,12 @@ def list_dependencies(package_name, version=None):
                 return v["dependencies"]
     return []
 
+def installed_version(package_name):
+    try:
+        return info_package(package_name)["installed"]
+    except KeyError:
+        return None
+
 # Just a helper function to rewrite a package metadata, not to be called by other modules.
 def _rewrite_metadata(package_name, metadata):
     metadata_file = open(METADATA_FILE(package_name), 'w+')
