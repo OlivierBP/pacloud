@@ -43,7 +43,7 @@ def mark_as_installed(package_name, version):
     for available_version in metadata['versions']:
         if(available_version['number'] == version):
             for dependency in available_version['dependencies']:
-                dependency_name = dependency[:max(-1,min(dependency.find('>'), dependency.find('=')))]
+                dependency_name = dependency#[:max(-1,min(dependency.find('>'), dependency.find('=')))]
                 _mark_as_required_by(dependency_name, package_name)
     _rewrite_metadata(package_name, metadata)
 

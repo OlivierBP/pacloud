@@ -1,0 +1,1 @@
+{"name": "imlib2", "description": "Image file loading library", "versions": [{"number": "1.4.10", "dependencies": []}], "required_by": ["feh"], "installed": "1.4.10"}
