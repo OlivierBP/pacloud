@@ -53,8 +53,12 @@ def update():
     print(libpacloud.update())
 
 def install(arg):
+    version = None
+    if('-' in arg):
+        version = arg[arg.find('-')+1:]
+        arg = arg[:arg.find('-'):]
     print("Resolving dependencies...\n")
-    dependencies_list = libpacloud.list_dependencies(arg)
+    dependencies_list = libpacloud.list_dependencies(arg, version)
     strdep = "Packages ({}):".format(len(dependencies_list))
     for dependency in dependencies_list:
         strdep += " {} ".format(dependency)
@@ -63,7 +67,8 @@ def install(arg):
         print("Installing packages...")
         for package in dependencies_list:
             print(package + "... ", end="")
-            libpacloud.install(package)
+            libpacloud.install(package, version)
+            version = None
             print("done!")
         print("Done!")
 
