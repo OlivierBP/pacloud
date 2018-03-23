@@ -50,6 +50,6 @@ def install(package_name, version=None):
     if not os.path.exists(path):
         os.makedirs(path,exist_ok = True)
 """
-    print(distutils.dir_util.copy_tree('/tmp/{}'.format(package_name),'/'))
+    distutils.dir_util.copy_tree('/tmp/{}'.format(package_name),'/')
     db.mark_as_installed(package_name, version)
 
