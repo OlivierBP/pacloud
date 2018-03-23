@@ -14,6 +14,16 @@ def list_packages():
 def info_package(package_name):
     return json.load(open(METADATA_FILE(package_name), 'r'))
 
+def list_dependencies(package_name, version=None):
+    versions = info_package(package_name)["versions"]
+    if(version == None):
+        return versions[0]["dependencies"]
+    else:
+        for v in versions:
+            if(v["number"] == version):
+                return v["dependencies"]
+    return []
+
 # Just a helper function to rewrite a package metadata, not to be called by other modules.
 def _rewrite_metadata(package_name, metadata):
     metadata_file = open(METADATA_FILE(package_name), 'w+')
