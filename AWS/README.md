@@ -200,3 +200,18 @@ It can be required to update the links in main.yaml to point to the S3 URL
 ### Find the bandwidth of an instance
 * download speedtest-cli on gentoo
 * ```speedtest-cli```
+
+
+
+## Template architecture
+
+**S3Buckets.yaml** *-> export Buckets name and ARN*
+
+**main.yaml** *-> import the values from S3Buckets.yaml and link the property between the nested stacks with outputs/parameters*  
+ |  
+ |------ Serverless.yaml  
+ |  
+ |------ Network.yaml  
+ |  
+ |------ Ec2.yaml  
+
