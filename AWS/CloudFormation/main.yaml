@@ -44,8 +44,9 @@ Parameters:
     Description: >-
       EC2 instance type for the bastion server
     Type: String
-    Default: t2.micro
+    Default: t2.nano
     AllowedValues:
+      - t2.nano
       - t2.micro
 
   SpotFleetAllocationStrategy:
@@ -96,7 +97,7 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: https://s3-eu-west-1.amazonaws.com/pacloud/CloudFormation/Serverless.yaml
-          
+
   Network:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -115,7 +116,9 @@ Resources:
         SpotFleetAllocationStrategy: !Ref SpotFleetAllocationStrategy
         # Parameters from Network
         VpcPacloudSpotFleet: !GetAtt Network.Outputs.VpcPacloudSpotFleet
-        PublicSubnetPacloud: !GetAtt Network.Outputs.PublicSubnetPacloud
+        PublicSubnetPacloud1: !GetAtt Network.Outputs.PublicSubnetPacloud1
+        PublicSubnetPacloud2: !GetAtt Network.Outputs.PublicSubnetPacloud2
+        PublicSubnetPacloud3: !GetAtt Network.Outputs.PublicSubnetPacloud3
         PrivateSubnetPacloudSpotFleet1: !GetAtt Network.Outputs.PrivateSubnetPacloudSpotFleet1
         PrivateSubnetPacloudSpotFleet2: !GetAtt Network.Outputs.PrivateSubnetPacloudSpotFleet2
         PrivateSubnetPacloudSpotFleet3: !GetAtt Network.Outputs.PrivateSubnetPacloudSpotFleet3

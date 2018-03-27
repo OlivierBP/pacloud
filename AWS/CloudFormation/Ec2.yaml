@@ -43,9 +43,17 @@ Parameters:
     Description: >-
       EC2 instance type for the bastion server
     Type: String
-    Default: t2.micro
+    Default: t2.nano
     AllowedValues:
       - t2.micro
+      - t2.nano
+  
+  NatInstanceType:
+    Description: Type instance for the NAT Instance
+    Default: t2.nano
+    Type: String
+    AllowedValues:
+      - t2.nano
 
   SpotFleetAllocationStrategy:
     Description: Choose the instance the be the cheapest or to give higher availability first
@@ -58,7 +66,11 @@ Parameters:
   # From Network
   VpcPacloudSpotFleet:
     Type: String
-  PublicSubnetPacloud:
+  PublicSubnetPacloud1:
+    Type: String
+  PublicSubnetPacloud2:
+    Type: String
+  PublicSubnetPacloud3:
     Type: String
   PrivateSubnetPacloudSpotFleet1:
     Type: String
@@ -70,6 +82,9 @@ Parameters:
     Type: String
   QueueToCompileArn:
     Type: String
+
+
+
 
 
 
@@ -91,18 +106,29 @@ Mappings:
       # '64': ami-e795dd9e
 
   BastionInstanceType2Arch:
+    t2.nano:
+      Arch: '64'
     t2.micro:
       Arch: '64'
   BastionInstanceRegionArch2AMI:
     eu-west-1:
       '64': ami-e795dd9e
 
+  NatInstanceType2Arch:
+    t2.nano:
+      Arch: 64
+  NatInstanceRegionArch2AMI:
+    eu-west-1:
+      '64': ami-a136a9d8
+
+
+
 
 
 
 Resources:
   ################## EC2 BASTION SERVER ##################
-  # Security group fot the bastion server
+  # Security group for the bastion server
   SgPacloudBastionServer:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
@@ -138,7 +164,7 @@ Resources:
           DeviceIndex: 0
           GroupSet: 
             - !Ref SgPacloudBastionServer
-          SubnetId: !Ref PublicSubnetPacloud
+          SubnetId: !Ref PublicSubnetPacloud1
       Tags:
       - Key: Project
         Value: Pacloud
@@ -244,11 +270,11 @@ Resources:
         - !Ref PacloudEc2WorkerRole
 
   # Security group for the spot instances: accept only ssh connections from the bastion server
-  SgPacloudSpotFleet:
+  SgPacloudWorker:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
-      GroupDescription: pacloud-spotfleet-sg
-      GroupName: pacloud-spotfleet-sg
+      GroupDescription: pacloud-worker-sg
+      GroupName: pacloud-worker-sg
       VpcId: !Ref VpcPacloudSpotFleet
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -257,7 +283,7 @@ Resources:
           SourceSecurityGroupId: !Ref SgPacloudBastionServer
       Tags:
         - Key: Name
-          Value: pacloud-spotfleet-sg
+          Value: pacloud-worker-sg
 
   SpotFleet:
     Type: AWS::EC2::SpotFleet
@@ -274,6 +300,7 @@ Resources:
         
         LaunchSpecifications:
         - EbsOptimized: 'false'
+          # InstanceInterruptionBehavior: hibernate
           IamInstanceProfile: 
             Arn: !GetAtt PacloudEc2WorkerInstanceProfile.Arn
           ImageId:
@@ -291,7 +318,7 @@ Resources:
           SecurityGroups:
           - GroupId:
               Fn::GetAtt:
-              - SgPacloudSpotFleet
+              - SgPacloudWorker
               - GroupId
           # SpotPrice: 
           SubnetId: !Join
@@ -310,6 +337,165 @@ Resources:
 
 
   
+
+
+
+
+  ################## NAt INSTANCES ##################
+  # Security group for the NAT Instances
+  SgPacloudNatInstance:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: pacloud-natinstance-sg
+      GroupName: pacloud-natinstance-sg
+      VpcId: !Ref VpcPacloudSpotFleet
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref SgPacloudWorker
+      Tags:
+        - Key: Name
+          Value: pacloud-natinstance-sg
+
+  # NAT Instance for AZ a
+  # https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_NAT_Instance.html
+  NatInstance1: 
+    Type: "AWS::EC2::Instance"
+    Properties:
+      SourceDestCheck: false
+      AvailabilityZone: eu-west-1a
+      InstanceType: !Ref NatInstanceType
+      ImageId: 
+        Fn::FindInMap: 
+          - NatInstanceRegionArch2AMI
+          - !Ref "AWS::Region"
+          - Fn::FindInMap:
+              - NatInstanceType2Arch
+              - !Ref NatInstanceType
+              - Arch
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeleteOnTermination: true
+          DeviceIndex: 0
+          GroupSet: 
+            - !Ref SgPacloudNatInstance
+          SubnetId: !Ref PublicSubnetPacloud1
+      Tags:
+      - Key: Project
+        Value: Pacloud
+      - Key: Name
+        Value: NatInstance1
+
+  # NAT Instance for AZ b
+  NatInstance2: 
+    Type: "AWS::EC2::Instance"
+    Properties:
+      SourceDestCheck: false
+      AvailabilityZone: eu-west-1b
+      InstanceType: !Ref NatInstanceType
+      ImageId: 
+        Fn::FindInMap: 
+          - NatInstanceRegionArch2AMI
+          - !Ref "AWS::Region"
+          - Fn::FindInMap:
+              - NatInstanceType2Arch
+              - !Ref NatInstanceType
+              - Arch
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeleteOnTermination: true
+          DeviceIndex: 0
+          GroupSet: 
+            - !Ref SgPacloudNatInstance
+          SubnetId: !Ref PublicSubnetPacloud2
+      Tags:
+      - Key: Project
+        Value: Pacloud
+      - Key: Name
+        Value: NatInstance2
+
+  # NAT Instance for AZ b
+  NatInstance3: 
+    Type: "AWS::EC2::Instance"
+    Properties:
+      SourceDestCheck: false
+      AvailabilityZone: eu-west-1c
+      InstanceType: !Ref NatInstanceType
+      ImageId: 
+        Fn::FindInMap: 
+          - NatInstanceRegionArch2AMI
+          - !Ref "AWS::Region"
+          - Fn::FindInMap:
+              - NatInstanceType2Arch
+              - !Ref NatInstanceType
+              - Arch
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeleteOnTermination: true
+          DeviceIndex: 0
+          GroupSet: 
+            - !Ref SgPacloudNatInstance
+          SubnetId: !Ref PublicSubnetPacloud3
+      Tags:
+      - Key: Project
+        Value: Pacloud
+      - Key: Name
+        Value: NatInstance3
+
+  
+  # Default routes for the private subnets point to the NAT
+  RouteTablePrivateSubnet1:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VpcPacloudSpotFleet
+  RouteToNatPrivateSubnet1:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateSubnet1
+      DestinationCidrBlock: 0.0.0.0/0
+      InstanceId: !Ref NatInstance1
+    DependsOn: NatInstance1
+  PrivateSubnet1RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateSubnet1
+      SubnetId: !Ref PrivateSubnetPacloudSpotFleet1
+
+  RouteTablePrivateSubnet2:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VpcPacloudSpotFleet
+  RouteToNatPrivateSubnet2:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateSubnet2
+      DestinationCidrBlock: 0.0.0.0/0
+      InstanceId: !Ref NatInstance2
+    DependsOn: NatInstance2
+  PrivateSubnet2SubnetRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateSubnet2
+      SubnetId: !Ref PrivateSubnetPacloudSpotFleet2
+
+  RouteTablePrivateSubnet3:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VpcPacloudSpotFleet
+  RouteToNatPrivateSubnet3:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateSubnet3
+      DestinationCidrBlock: 0.0.0.0/0
+      InstanceId: !Ref NatInstance3
+    DependsOn: NatInstance3
+  PrivateSubnet3SubnetRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateSubnet3
+      SubnetId: !Ref PrivateSubnetPacloudSpotFleet3
+
 
 
 
