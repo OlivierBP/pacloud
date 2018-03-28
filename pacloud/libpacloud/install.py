@@ -12,22 +12,18 @@ def list_dependencies(package_name, version=None):
     list = []
 
     #check dependencies
-    def check_dep(package_name):
-        package = db.info_package(package_name)
-        try:
-            if(version != None or package["versions"][0]["number"] != package["installed"]):
-                list.append(package["name"])
-                for dep in package["versions"][0]["dependencies"]:
-                    check_dep(dep)
-        except KeyError:
-            if len(package["versions"][0]["dependencies"]) == 0 and package["name"] not in list:
-                list.append(package["name"])
-            else:
-                for dep in package["versions"][0]["dependencies"]:
-                    if package["name"] not in list:
-                        list.append(package["name"])
-                    if dep not in list:
-                        check_dep(dep)
+    def check_dep(package_name, version=None):
+        installed_version = db.installed_version(package_name)
+        dep_package = db.list_dependencies(package_name, version)
+        if package_name not in list:
+            list.append(package_name)
+        elif (version != None) and (version != installed_version):
+            list.append(package_name)
+        for dep in dep_package:
+            if package_name not in list:
+                list.append(package_name)
+            if dep not in list:
+                check_dep(dep)
 
     check_dep(package_name)
     return list
