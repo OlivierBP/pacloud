@@ -48,9 +48,11 @@ def remove_package(package_name):
 
 def modify_package(package_name, new_metadata):
     current_metadata = info_package(package_name)
-    # Updating the database doesn't have to change the state of installed packages
+    # Updating the database doesn't have to change the state of installed packages and required_by
     if('installed' in current_metadata):
         new_metadata['installed'] = current_metadata['installed']
+    if('required_by' in current_metadata):
+        new_metadata['required_by'] = current_metadata['required_by']
     _rewrite_metadata(package_name, new_metadata)
 
 def mark_as_installed(package_name, version):
