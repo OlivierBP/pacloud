@@ -50,7 +50,8 @@ def search(arg):
 
 def update():
     print('update...')
-    print(libpacloud.update())
+    libpacloud.update()
+    print('Done!')
 
 def install(arg):
     version = None
