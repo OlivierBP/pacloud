@@ -20,10 +20,10 @@ def list_dependencies(package_name, version=None):
         elif (version != None) and (version != installed_version):
             list.append(package_name)
         for dep in dep_package:
-            if package_name not in list:
-                list.append(package_name)
-            if dep not in list:
+            if dep not in list and package_name not in list:
                 check_dep(dep)
+            if package_name not in list:
+                list.append(package_name) 
 
     check_dep(package_name)
     return list
