@@ -10,6 +10,7 @@ def main():
     package_group.add_argument('-i', '--install', help='install specified package', metavar='package')
     package_group.add_argument('-r', '--remove', help='remove specified package', metavar='package')
     package_group.add_argument('-c', '--compile', help='compile specified package', metavar='package')
+    package_group.add_argument('-q', '--query', help='return detailed informations regarding specified package', metavar='package')
     parser.add_argument('-u', '--update', help='update local database', action='store_true')
     parser.add_argument('-U', '--upgrade', help='upgrade system', action='store_true')
     parser.add_argument('--update-config', help='send user configuration to the server', action='store_true')
@@ -23,6 +24,10 @@ def main():
             update()
         elif name == "install":
             install(arg)
+        elif name == "remove":
+            remove(arg)
+        elif name == "query":
+            query(arg)
         else:
             func = getattr(libpacloud, name)
             if (arg):
@@ -49,8 +54,9 @@ def search(arg):
         print("\t"+package["description"])
 
 def update():
-    print('update...')
-    print(libpacloud.update())
+    print('Update...')
+    libpacloud.update()
+    print('Done!')
 
 def install(arg):
     version = None
@@ -71,6 +77,47 @@ def install(arg):
             version = None
             print("done!")
         print("Done!")
+
+def remove(arg):
+    print('Resolving dependencies...\n')
+    dependencies_list = libpacloud.list_remove_dependencies(arg)
+    strdep = "Packages ({}):".format(len(dependencies_list))
+    for dependency in dependencies_list:
+        strdep += " {} ".format(dependency)
+    print(strdep +"\n")
+    if(_yesno("Do you want to remove these packages? [Y/n] ")):
+        for package in dependencies_list:
+            print(package + "... ", end="")
+            libpacloud.remove(arg)
+            print("done!")
+        print("Done!")
+
+def query(arg):
+    results = libpacloud.search(arg)
+    if(len(results) != 1):
+        print('Ambiguous search. Aborting.')
+        return
+    print('Name        : {}'.format(results[0]['name']))
+    print('Description : {}'.format(results[0]['description']))
+    print('Versions    :')
+    for version in results[0]['versions']:
+        print('  - Number  : {}'.format(version['number']))
+        print('    Dependencies:', end="")
+        for dep in version['dependencies']:
+            print(' {} '.format(dep), end="")
+        print()
+    try:
+        print('Installed   : {}'.format(results[0]['installed']))
+    except KeyError:
+        pass
+    try:
+        results[0]['required_by']
+        print('Required by :', end="")
+        for req in results[0]['required_by']:
+            print(' {} '.format(req), end="")
+        print()
+    except KeyError:
+        pass
 
 def _yesno(message):
     user_choice = input(message)
