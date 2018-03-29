@@ -82,12 +82,12 @@ Resources:
                   - sqs:GetQueueUrl
                 Resource: !GetAtt QueueToCompile.Arn
 
-  LambdaPackageRequestRoleInstanceProfile: 
-    Type: "AWS::IAM::InstanceProfile"
-    Properties: 
-      Path: "/"
-      Roles: 
-        - !Ref LambdaPackageRequestRole
+  # LambdaPackageRequestRoleInstanceProfile: 
+  #   Type: "AWS::IAM::InstanceProfile"
+  #   Properties: 
+  #     Path: "/"
+  #     Roles: 
+  #       - !Ref LambdaPackageRequestRole
 
 
   ################## LAMBDA SYNC CLIENT DB ##################
@@ -376,3 +376,7 @@ Outputs:
   QueueToCompileArn:
     Value: !GetAtt QueueToCompile.Arn
     Description: ARN of QueueToCompile
+
+  S3BucketLambda:
+    Value: !Ref S3BucketLambda
+    Description: Name of the bucket that store the Lambda functions

@@ -83,8 +83,14 @@ Parameters:
   QueueToCompileArn:
     Type: String
 
+  # From Serverless
+  S3BucketLambda:
+    Type: String
 
-
+  S3KeyLambdaCustomResourceSpotFleet:
+    Description: Path in the S3 bucket where the lambda code for CustomResourceSpotFleet is stored
+    Default: Lambda/CustomResource_SpotFleet.zip
+    Type: String
 
 
 
@@ -285,55 +291,86 @@ Resources:
         - Key: Name
           Value: pacloud-worker-sg
 
-  SpotFleet:
-    Type: AWS::EC2::SpotFleet
+
+
+
+  LambdaCustomResourceSpotFleet:
+    Type: 'AWS::Lambda::Function'
     Properties:
-      SpotFleetRequestConfigData:
-        AllocationStrategy: !Ref SpotFleetAllocationStrategy
-        ExcessCapacityTerminationPolicy: default
-        IamFleetRole: !GetAtt [PacloudEc2SpotFleetRole, Arn]
-        ReplaceUnhealthyInstances: true
-        # SpotPrice: '1000'
-        TargetCapacity: !Ref Ec2SpotFleetTargetCapacity
-        TerminateInstancesWithExpiration: true
-        Type: maintain
-        
-        LaunchSpecifications:
-        - EbsOptimized: 'false'
-          # InstanceInterruptionBehavior: hibernate
-          IamInstanceProfile: 
-            Arn: !GetAtt PacloudEc2WorkerInstanceProfile.Arn
-          ImageId:
-            Fn::FindInMap:
-            - SpotInstanceRegionArch2AMI
-            - !Ref AWS::Region
-            - Fn::FindInMap:
-              - SpotInstanceType2Arch
-              - !Ref SpotFleetEc2InstanceType
-              - Arch
-          InstanceType: !Ref SpotFleetEc2InstanceType
-          KeyName: !Ref KeyPairSpotFleet
-          Monitoring: 
-            Enabled: true
-          SecurityGroups:
-          - GroupId:
-              Fn::GetAtt:
-              - SgPacloudWorker
-              - GroupId
-          # SpotPrice: 
-          SubnetId: !Join
-            - ','
-            - - !Ref PrivateSubnetPacloudSpotFleet1 
-              - !Ref PrivateSubnetPacloudSpotFleet2
-              - !Ref PrivateSubnetPacloudSpotFleet3
-          TagSpecifications: 
-          - ResourceType: instance
-            Tags:
-            - Key: Project
-              Value: Pacloud
-            - Key: Name
-              Value: PacloudSpotInstance
-# InstanceInterruptionBehavior to hibernate needs a workaround: doesn't work in CloudFormation (not implemented)   
+      Code:
+        S3Bucket: !Ref S3BucketLambda
+        S3Key: !Ref S3KeyLambdaCustomResourceSpotFleet
+      Description: Create a spotfleet
+      FunctionName: LambdaCustomResourceSpotFleet
+      Handler: CustomResource_SpotFleet.lambda_handler
+      Role: !GetAtt 
+        - LambdaCustomResourceSpotFleetRole
+        - Arn
+      Runtime: nodejs4.3
+      Timeout: 300
+      MemorySize: 128
+      Tags:
+        - Key: Project
+          Value: Pacloud
+        - Key: Name
+          Value: LambdaCustomResourceSpotFleet
+
+  LambdaCustomResourceSpotFleetRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies: 
+        - 
+          PolicyName: CreateSpotFleet
+          PolicyDocument: 
+            Version: 2012-10-17
+            Statement: 
+              - 
+                Effect: Allow
+                Action: 
+                  - ec2:DeleteSpotDatafeedSubscription
+                  - ec2:DescribeSpotFleetRequestHistory
+                  - ec2:RequestSpotInstances
+                  - ec2:CancelSpotFleetRequests
+                  - ec2:RequestSpotFleet
+                  - ec2:DescribeSpotInstanceRequests
+                  - ec2:DescribeSpotFleetRequests
+                  - ec2:DescribeSpotPriceHistory
+                  - ec2:CancelSpotInstanceRequests
+                  - ec2:DescribeSpotFleetInstances
+                  - ec2:ModifySpotFleetRequest
+                  - ec2:CreateSpotDatafeedSubscription
+                  - ec2:DescribeSpotDatafeedSubscription
+                Resource: '*'
+        - 
+          PolicyName: logLambdaCustomResource
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+
+
+
+
+
+
+
+
+
+
 
 
   
@@ -509,3 +546,72 @@ Outputs:
   SpotInstanceConnect:
     Value: ssh -i /path/to/key/spot.pem -o ProxyCommand='ssh -i /path/to/key/bastion.pem -W %h:%p user@publicIpBastion' user@privateIpSpot
     Description: Connection chain to reach spot instance through the bastion server with local ssh keys
+
+  # Export values to create the CustomResource SpotFleet in another stack
+  AllocationStrategy:
+    Value: !Ref SpotFleetAllocationStrategy
+    Description: To create the CustomResource SpotFleet
+    Export:
+      Name: AllocationStrategy
+
+  IamFleetRole:
+    Value: !GetAtt PacloudEc2SpotFleetRole.Arn
+    Description: To create the CustomResource SpotFleet
+    Export:
+      Name: IamFleetRole
+
+  TargetCapacity:
+    Value: !Ref Ec2SpotFleetTargetCapacity
+    Description: To create the CustomResource SpotFleet
+    Export:
+      Name: TargetCapacity
+
+  IamInstanceProfile:
+    Value: !GetAtt PacloudEc2WorkerInstanceProfile.Arn
+    Description: To create the CustomResource SpotFleet
+    Export:
+      Name: IamInstanceProfile
+
+  ImageId:
+    Value: 
+      Fn::FindInMap:
+          - SpotInstanceRegionArch2AMI
+          - !Ref AWS::Region
+          - Fn::FindInMap:
+            - SpotInstanceType2Arch
+            - !Ref SpotFleetEc2InstanceType
+            - Arch
+    Description: To create the CustomResource SpotFleet
+    Export:
+      Name: ImageId
+
+  InstanceType:
+    Value: !Ref SpotFleetEc2InstanceType
+    Description: To create the CustomResource SpotFleet
+    Export:
+      Name: InstanceType
+
+  KeyName:
+    Value: !Ref KeyPairSpotFleet
+    Description: To create the CustomResource SpotFleet
+    Export:
+      Name: KeyName
+
+  SecurityGroups:
+    Value: 
+      Fn::GetAtt:
+            - SgPacloudWorker
+            - GroupId
+    Description: To create the CustomResource SpotFleet
+    Export:
+      Name: SecurityGroups
+
+  SubnetId:
+    Value: !Join
+        - ','
+        - - !Ref PrivateSubnetPacloudSpotFleet1 
+          - !Ref PrivateSubnetPacloudSpotFleet2
+          - !Ref PrivateSubnetPacloudSpotFleet3
+    Description: To create the CustomResource SpotFleet
+    Export:
+      Name: SubnetId
