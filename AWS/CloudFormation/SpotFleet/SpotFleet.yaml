@@ -44,7 +44,18 @@ Resources:
           - Key: Project
             Value: Pacloud
           - Key: Name
-            Value: PacloudSpotInstance_cfd
+            Value: PacloudSpotInstance
+
+
+
+Outputs:
+  SpotFleetRequestId:
+    Value: !GetAtt SpotFleet.SpotFleetRequestId
+    Description: Return the ID of the spotfleet created. NEEDED TO CAN DELETE/UPADTE the stack, don't delete and don't rename
+
+  TargetCapacity:
+    Value: !ImportValue TargetCapacity
+    Description: Target capacity of the spotfleet
 
 
 
