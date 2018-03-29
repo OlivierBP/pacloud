@@ -139,7 +139,7 @@ function createSpotFleet(properties, callback) {
           },
           SecurityGroups: [
             {
-              GroupId: String(properties.LaunchSpecifications[0].SecurityGroups[0])
+              GroupId: String(properties.LaunchSpecifications[0].SecurityGroups[0].GroupId)
             }
           ],
           SubnetId: properties.LaunchSpecifications[0].SubnetId,
