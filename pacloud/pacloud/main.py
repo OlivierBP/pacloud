@@ -23,6 +23,8 @@ def main():
             update()
         elif name == "install":
             install(arg)
+        elif name == "remove":
+            remove(arg)
         else:
             func = getattr(libpacloud, name)
             if (arg):
@@ -49,7 +51,7 @@ def search(arg):
         print("\t"+package["description"])
 
 def update():
-    print('update...')
+    print('Update...')
     libpacloud.update()
     print('Done!')
 
@@ -70,6 +72,20 @@ def install(arg):
             print(package + "... ", end="")
             libpacloud.install(package, version)
             version = None
+            print("done!")
+        print("Done!")
+
+def remove(arg):
+    print('Resolving dependencies...\n')
+    dependencies_list = libpacloud.list_remove_dependencies(arg)
+    strdep = "Packages ({}):".format(len(dependencies_list))
+    for dependency in dependencies_list:
+        strdep += " {} ".format(dependency)
+    print(strdep +"\n")
+    if(_yesno("Do you want to remove these packages? [Y/n] ")):
+        for package in dependencies_list:
+            print(package + "... ", end="")
+            libpacloud.remove(arg)
             print("done!")
         print("Done!")
 

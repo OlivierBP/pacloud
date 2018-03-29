@@ -71,7 +71,7 @@ def mark_as_uninstalled(package_name):
     for available_version in metadata['versions']:
         if(available_version['number'] == metadata['installed']):
             for dependency in available_version['dependencies']:
-                dependency_name = dependency[:max(-1,min(dependency.find('>'), dependency.find('=')))]
+                dependency_name = dependency#[:max(-1,min(dependency.find('>'), dependency.find('=')))]
                 _remove_required_by(dependency_name, package_name)
     metadata.pop('installed', None)
     _rewrite_metadata(package_name, metadata)
