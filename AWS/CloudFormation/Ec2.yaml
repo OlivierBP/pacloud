@@ -94,6 +94,11 @@ Parameters:
 
 
 
+
+
+
+
+
 Mappings:
   SpotInstanceType2Arch:
     c3.large:
@@ -108,8 +113,12 @@ Mappings:
       Arch: '64'
   SpotInstanceRegionArch2AMI:
     eu-west-1:
-      '64': ami-2a662e53
-      # '64': ami-e795dd9e
+      '64': ami-19104d60
+      # '64': ami-7714490e
+      # '64': ami-7d83c004
+      # '64': ami-1a80d763
+      # '64': ami-2a662e53
+
 
   BastionInstanceType2Arch:
     t2.nano:

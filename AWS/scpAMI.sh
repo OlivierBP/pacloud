@@ -4,13 +4,13 @@
 
 
 bastionUser=ubuntu
-bastionIp=52.51.219.136
+bastionIp=34.242.1.193
 
 workerUser=ec2-user
-workerIp=10.0.2.177
+workerIp=10.0.4.133
 
 
-cmd="scp -i ~/Bureau/KeyPair_Server1.pem -o ProxyCommand='ssh -i ~/Bureau/KeyPair_Server1.pem -W %h:%p $bastionUser@$bastionIp' -r /home/olivier/PROJECTS/Pacloud/AWS/AMI/ $workerUser@$workerIp:/home/ec2-user/"
+cmd="scp -i ~/Bureau/KeyPair_Server1.pem -o ProxyCommand='ssh -i ~/Bureau/KeyPair_Server1.pem -W %h:%p $bastionUser@$bastionIp' -r /home/olivier/PROJECTS/Pacloud/AWS/AMI/ $workerUser@$workerIp:/pacloud/"
 
 eval $cmd
 
