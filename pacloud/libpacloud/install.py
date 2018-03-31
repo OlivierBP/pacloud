@@ -6,6 +6,7 @@ from libpacloud.config import DB_DIR
 import os
 import tarfile
 import distutils.dir_util
+import shutil
 
 
 def list_dependencies(package_name, version=None):
@@ -48,4 +49,5 @@ def install(package_name, version=None):
 """
     distutils.dir_util.copy_tree('/tmp/{}'.format(package_name),'/')
     db.mark_as_installed(package_name, version)
+    shutil.rmtree('/tmp/{}'.format(package_name),'/')
 

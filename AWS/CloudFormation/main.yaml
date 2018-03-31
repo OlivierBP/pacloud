@@ -125,6 +125,7 @@ Resources:
         # Parameters from Serverless
         BucketStorageArn: !ImportValue PacloudBucketPackagesArn
         QueueToCompileArn: !GetAtt Serverless.Outputs.QueueToCompileArn
+        S3BucketLambda: !GetAtt Serverless.Outputs.S3BucketLambda
 
 
 

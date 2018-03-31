@@ -18,10 +18,12 @@ if [ -d "Lambda" ]; then
     echo "Zipping Lambda function..."
     zip PackageRequest.zip PackageRequest.js
     zip SyncClientDb.zip SyncClientDb.js
+    zip CustomResource_SpotFleet.zip CustomResource_SpotFleet.js
 
     echo "Uploading Lambda functions..."
     aws s3 cp PackageRequest.zip s3://$bucket/Lambda/
     aws s3 cp SyncClientDb.zip s3://$bucket/Lambda/
+    aws s3 cp CustomResource_SpotFleet.zip s3://$bucket/Lambda/
 
     echo "Lambda functions uploaded"
     cd ..
