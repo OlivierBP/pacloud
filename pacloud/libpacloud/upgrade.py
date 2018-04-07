@@ -3,9 +3,10 @@
 import libpacloud.database as db
 from libpacloud.install import install
 
-def update_all():
+def update_all(package_name):
   list = db.list_packages()
-  if version != None
-    for package in list:
+  version = db.installed_version(package_name)
+  for package in list:
+    if version != None
       install(package_name)
       return list
