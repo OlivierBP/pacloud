@@ -5,6 +5,7 @@ from libpacloud.install import install
 
 def update_all():
   list = db.list_packages()
-  for package in list:
-    return list
-    install()
+  if version != None
+    for package in list:
+      install(package_name)
+      return list
