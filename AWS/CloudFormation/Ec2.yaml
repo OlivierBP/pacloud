@@ -113,7 +113,8 @@ Mappings:
       Arch: '64'
   SpotInstanceRegionArch2AMI:
     eu-west-1:
-      '64': ami-19104d60
+      '64': ami-44dc843d
+      # '64': ami-19104d60
       # '64': ami-7714490e
       # '64': ami-7d83c004
       # '64': ami-1a80d763
@@ -378,8 +379,6 @@ Resources:
               - Effect: Allow
                 Action:
                   - cloudformation:DescribeStacks
-                  # - cloudformation:ListStackResources
-                  # - cloudformation:DescribeStackResource
                 Resource: arn:aws:cloudformation:*:*:*
 
 
@@ -397,7 +396,7 @@ Resources:
 
 
 
-  ################## NAt INSTANCES ##################
+  ################## NAT INSTANCES ##################
   # Security group for the NAT Instances
   SgPacloudNatInstance:
     Type: 'AWS::EC2::SecurityGroup'
@@ -409,6 +408,10 @@ Resources:
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
+          SourceSecurityGroupId: !Ref SgPacloudWorker
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
           SourceSecurityGroupId: !Ref SgPacloudWorker
       Tags:
         - Key: Name

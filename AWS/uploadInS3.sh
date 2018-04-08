@@ -7,6 +7,7 @@
 # Configure the credentials on the local computer with "aws configure"
 
 
+
 # S3 Bucket
 bucket=pacloud
 
@@ -49,9 +50,23 @@ else
 fi
 
 
+# Upload the AMI folder in S3
+if [ -d "AMI" ]; then
+
+    echo "Uploading AMI folder..."
+    aws s3 cp --recursive AMI s3://$bucket/AMI
+
+    echo "AMI folder uploaded"
+else
+    echo "Warning: Can't find AMI directory"
+fi
+
 
 # Put in the clip board the path to the main.yaml
 echo https://s3-eu-west-1.amazonaws.com/pacloud/CloudFormation/main.yaml | xclip -selection clipboard
 
 echo "Done"
 
+
+# To retrieve from S3 via awscli: 
+#aws s3 cp --recursive s3://pacloud/AMI/ /pacloud/AMI/
