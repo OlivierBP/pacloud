@@ -13,9 +13,9 @@ Pacloud/AWS/
 │       ├── compilePackage.sh  
 │       ├── cronJob.sh  
 │       └── setMakeConf.sh  
-├── CloudFormation 
-│   ├── DynamoDB
-│   │   └── DynamoDB.yaml
+├── CloudFormation  
+│   ├── DynamoDB  
+│   │   └── DynamoDB.yaml  
 │   ├── Ec2.yaml  
 │   ├── main.yaml  
 │   ├── Network.yaml  
