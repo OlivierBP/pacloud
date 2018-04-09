@@ -13,14 +13,16 @@ function convert() {
 		#	sed 's/\t//' | # Remove tabs at the beginning of the lines
 		#	printf %s "$(cat)" | # Remove empty lines and ending newline to avoid empty element at the end
 		#	jq -Rs 'split("\n")') # Put in a json list
-		RDEPEND="$(echo "$RDEPEND" | sed 's/\n//' | printf %s "$(cat)")"
+		RDEPEND="$(echo "$RDEPEND" | sed 's/\[.*\]//' | sed 's/\t*//' | sed 's/\n//' | printf %s "$(cat)")"
 		list="["
 		usedep=0 # levels for the optional dependencies that are sometimes written on multiple lines
 		dep=""
 		[[ "$RDEPEND" == "" ]] || { # Checking that the dependencies are not null
 			while read depline; do
-				[[ "$depline" =~ "?" || "$depline" =~ "||" ]] && ((usedep++))
-				[[ "$depline" =~ ")" ]] && ((usedep--))
+				[[ "$depline" =~ "?" || "$depline" =~ "||" ]] && ((usedep += $(echo $depline | grep -o '?\|||' | wc -l))) # usedep incremented by the number of ? or || (characters opening braces)
+				[[ "$depline" =~ ")" ]] && ((usedep -= $(echo $depline | grep -o ')' | wc -l))) # usedep decremented by the number of )
+				#[[ "$depline" =~ "?" || "$depline" =~ "||" ]] && ((usedep++)); echo $usedep
+				#[[ "$depline" =~ ")" ]] && ((usedep--)) && echo $usedep
 				[[ "$dep" == "" ]] && dep="$depline" || dep="${dep} $depline"
 				[[ "$dep" == "" || $usedep > 0 ]] || { list="$list \""$dep"\"," && dep=""; }
 			done <<< "$RDEPEND"
@@ -32,7 +34,7 @@ function convert() {
 
 	METADATA="{
 		\"name\": \"$NAME\",
-		\"description\": \"$DESCRIPTION\",
+		\"description\": \""$(echo $DESCRIPTION | sed 's/\"/\\"/g')"\",
 		\"versions\": ["
 	for (( i=0; i<${#versions[@]}; i++ )); do
 		METADATA="$METADATA {
@@ -57,4 +59,4 @@ for dir in $(ls -d */); do
 done
 metadata="${metadata::-1}]"
 cd $DBDIR
-echo "$metadata" > db.json
+echo "$metadata" > "$(echo $1 | awk -F"/" '{print $NF}')".json
