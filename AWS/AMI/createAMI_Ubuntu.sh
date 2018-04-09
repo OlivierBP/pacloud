@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Create the AMI for the Pacloud's workers from a Ubuntu AMI (tested with Ubuntu 16.04 LTS HVM
+# Create the AMI for the Pacloud's workers from a Ubuntu AMI (tested with Ubuntu 16.04 LTS HVM)
 
 # Update
 apt-get --assume-yes update
