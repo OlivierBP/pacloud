@@ -113,7 +113,8 @@ Mappings:
       Arch: '64'
   SpotInstanceRegionArch2AMI:
     eu-west-1:
-      '64': ami-44dc843d
+      '64': ami-05461d7c
+      # '64': ami-44dc843d
       # '64': ami-19104d60
       # '64': ami-7714490e
       # '64': ami-7d83c004

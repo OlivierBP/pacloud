@@ -28,7 +28,7 @@ chown ubuntu:users /pacloud
 
 
 # DOCKER
-#docker run -ti --cap-add=SYS_PTRACE olivierbp/pacloud:version1 /bin/bash &
+docker pull olivierbp/pacloud
 
 # CRONTAB
 # Enable the service cron

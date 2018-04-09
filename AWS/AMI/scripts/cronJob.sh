@@ -12,7 +12,7 @@ if [ ! -d "/pacloud/compiling.lock" ]; then
     { # try
         # Call the compilation script
         #/pacloud/AMI/scripts/compilePackage.sh
-        docker run --rm --cap-add=SYS_PTRACE olivierbp/pacloud:version4 /pacloud/AMI/scripts/compilePackage.sh
+        docker run --rm --cap-add=SYS_PTRACE olivierbp/pacloud:latest /pacloud/AMI/scripts/compilePackage.sh
     } || { # catch
         echo "compilation script failed"
     }

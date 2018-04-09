@@ -23,9 +23,15 @@ RUN aws configure set region eu-west-1
 # Run the job
 ENTRYPOINT ["/pacloud/AMI/scripts/compilePackage.sh"]
 
+
 # Build this container with
 # cd /pacloud/AMI/
 # docker build -f /pacloud/AMI/Dockerfile -t olivierbp/pacloud .
 # docker images
 # docker run --rm --cap-add=SYS_PTRACE olivierbp/pacloud:latest
+
+# To commit and push
+# docker login --username olivierbp
+# docker commit -a "olivierbp" -m "message" containerId olivier/pacloud:tags
+# docker push olivierbp/pacloud:tags
 
