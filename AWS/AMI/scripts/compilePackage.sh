@@ -1,15 +1,6 @@
 #! /bin/sh
 
 # This script get a compilation request from the SQS queue, work on, upload the result in S3 and delete the task from the queue
-# Require "awscli"
-# Require "jq"
-
-# Install of "awscli" for gentoo:
-# emerge dev-python/pip
-# pip install pip --user
-# ./.local/bin/aws s3 ls (or add to the path)
-# Add to path: PATH=$PATH:/home/ec2-user/.local/bin
-# Need to set a region: aws configure set region eu-west-1
 
 # Name of the queue
 queueName=QueueToCompile
@@ -24,9 +15,8 @@ queueUrl=$(aws sqs get-queue-url --queue-name $queueName | jq -r '.QueueUrl')
 
 # Get a message from the queue
 message=$(aws sqs receive-message --queue-url $queueUrl)
-echo $message
-
-
+echo $message | jq -r ''
+    
 # If there is a message (message is null if not any was received)
 if [ -n "$message" ]; then
 
@@ -43,10 +33,13 @@ if [ -n "$message" ]; then
     body=$(echo $message | jq -r '.Messages[].Body')
 
     package=$(echo $body | sed 's/\-[0-9].*//')
-    
+    version=$(echo $body | sed 's/.*-//')
+   
+    # Before compile, set the make.conf
+    /pacloud/AMI/scripts/setMakeConf.sh
     # Compilation in a subprocess
     #/pacloud/AMI/scripts/compilePackageSubProcess.sh $package 
-    emerge --buildpkgonly $package
+    emerge --buildpkgonly  =$package-$version
     echo "Package compiled"
 
     # Upload the binary in S3
@@ -63,16 +56,4 @@ else
     echo "Not any message for now..."
 fi
     
-
-
-
-
-
-
-
-
-
-
-
-
 

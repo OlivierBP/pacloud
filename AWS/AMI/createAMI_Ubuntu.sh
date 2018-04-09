@@ -15,18 +15,11 @@ tmux
 
 # Install the packages needed to do the job
 apt-get --assume-yes install \
-#jq \
-#cron \
-#awscli \
-hibagent \
-#gcc \
-#tar 
+docker.io \
+hibagent 
 
 # Enable hibagent service
 /usr/bin/enable-ec2-spot-hibernation
-
-# Configure the region for awscli
-#aws configure set region eu-west-1
 
 # Create /pacloud
 mkdir -p /pacloud
@@ -34,21 +27,12 @@ mkdir -p /pacloud
 chown ubuntu:users /pacloud
 
 
-
-
 # DOCKER
-# docker ps --all
-apt assume-yes install docker.io
-
 #docker run -ti --cap-add=SYS_PTRACE olivierbp/pacloud:version1 /bin/bash &
-
-
-
-
 
 # CRONTAB
 # Enable the service cron
 systemctl enable cron
-
 # Add the crontab instruction
 echo "* * * * * root /pacloud/AMI/scripts/cronJob.sh >> /pacloud/crontab.log 2>&1" >> /etc/crontab
+
