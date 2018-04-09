@@ -1,1 +1,0 @@
-{"name": "example", "description": "Just a test package", "versions": [{"number": "2.4", "dependencies": ["test>=2"]}, {"number": "1.8", "dependencies": ["test<=1.9"]}], "installed": "2.4"}
