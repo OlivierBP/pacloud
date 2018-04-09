@@ -35,16 +35,11 @@ fi
 
 # Upload the CloudFormation templates in S3
 if [ -d "CloudFormation" ]; then
-    cd CloudFormation
 
     echo "Uploading CloudFormation templates..."
-    aws s3 cp main.yaml s3://$bucket/CloudFormation/
-    aws s3 cp Serverless.yaml s3://$bucket/CloudFormation/
-    aws s3 cp Network.yaml s3://$bucket/CloudFormation/
-    aws s3 cp Ec2.yaml s3://$bucket/CloudFormation/
+    aws s3 cp --recursive CloudFormation s3://$bucket/CloudFormation
 
     echo "CloudFormation templates uploaded"
-    cd ..
 else
     echo "Warning: Can't find CloudFormation directory"
 fi

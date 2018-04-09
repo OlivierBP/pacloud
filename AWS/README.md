@@ -13,7 +13,9 @@ Pacloud/AWS/
 │       ├── compilePackage.sh  
 │       ├── cronJob.sh  
 │       └── setMakeConf.sh  
-├── CloudFormation  
+├── CloudFormation 
+│   ├── DynamoDB
+│   │   └── DynamoDB.yaml
 │   ├── Ec2.yaml  
 │   ├── main.yaml  
 │   ├── Network.yaml  
@@ -42,7 +44,7 @@ Pacloud/AWS/
 ```SHELL
 # Create the container
 cd Pacloud/AWS/AMI/
-docker build AMI/Dockerfile -t olivierbp/pacloud .
+docker build -f Dockerfile -t olivierbp/pacloud .
 docker run --rm --cap-add=SYS_PTRACE olivierbp/pacloud:latest
 
 # Commit and push the container to DockerHub
@@ -76,6 +78,7 @@ Need to change the AMI in the EC2.yaml template in the "Mappings" part:
     ./uploadInS3.sh
     ```
 1. Create S3Buckets.yaml stack
+1. Create DynamoDB.yaml stack
 2. Create main.yaml stack
     * Automatically deploy nested stack Serverless.yaml
     * Automatically deploy nested stack network.yaml

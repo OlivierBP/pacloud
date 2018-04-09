@@ -8,6 +8,9 @@ queueName=QueueToCompile
 # Bucket name
 bucketName=pacloud-packages-bucket
 
+# Name of the DynamoFb Table
+dynamoDbTableName=PacloudPackages
+
 
 # Get the queue URL
 queueUrl=$(aws sqs get-queue-url --queue-name $queueName | jq -r '.QueueUrl')
@@ -45,12 +48,27 @@ if [ -n "$message" ]; then
     # Upload the binary in S3
     packageFolder=$(echo $body | sed 's/.*\///')
     parentFolder=$(echo $body | sed 's/\/.*//')
-    aws s3 cp /usr/portage/packages/$parentFolder/$packageFolder.tbz2 s3://$bucketName/
+    aws s3 cp /usr/portage/packages/$parentFolder/$packageFolder.tbz2 s3://$bucketName/ --acl public-read
     echo "Binary uploaded"
+
+    # Add the S3 link of the package in the DynamoDb table
+    item="{ \
+               \"name\": { \
+                    \"S\": \"$package\" \
+                }, \
+                \"version\": { \
+                    \"S\": \"$version\" \
+                }, \
+                \"linkS3\": { \
+                    \"S\": \"https://s3-eu-west-1.amazonaws.com/$bucketName/$packageFolder.tbz2\" \
+                } \
+         }"
+    aws dynamodb put-item --table-name $dynamoDbTableName --item "$item"
+    echo "Link added in the DynamoDb table"
 
     # Delete message
     aws sqs delete-message --queue-url $queueUrl --receipt-handle $receiptHandle
-    echo "Message deleted"
+    echo "SQS message deleted"
 
 else
     echo "Not any message for now..."
