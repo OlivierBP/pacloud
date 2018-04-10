@@ -6,11 +6,11 @@ from libpacloud.server import download_db, download_category
 import libpacloud.database as db
 
 def update():
+    packages = db.list_packages()
     for line in download_db().splitlines():
         print(line, end="")
         new_db = json.loads(download_category(line), strict=False)
         print(' downloaded')
-        packages = db.list_packages()
         # Adding new packages and modifying existing ones
         for package in new_db:
             if(package["name"] in packages):
