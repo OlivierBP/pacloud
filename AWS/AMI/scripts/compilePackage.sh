@@ -40,8 +40,11 @@ if [ -n "$message" ]; then
     # Before compile, set the make.conf
     /pacloud/AMI/scripts/setMakeConf.sh
     
-    # Compilation in a background process
-    /pacloud/AMI/scripts/emergeCommand.sh $package $version &
+    errorMessage=""
+    # Compilation in a background process and redirect all the errors in $errorMessage
+#ERROR=$(./useless.sh 2>&1 >/dev/null)
+    errorMessage=$(/pacloud/AMI/scripts/emergeCommand.sh $package $version 2>&1 >/dev/null &)
+    [[ ! -z $errorMessage ]] && echo "Error compilation: $errorMessage"
     # PID of the background process
     PROC_ID=$!
 
@@ -59,8 +62,6 @@ if [ -n "$message" ]; then
     aws s3 cp /usr/portage/packages/$parentFolder/$packageFolder.tbz2 s3://$bucketName/ --acl public-read
     echo "Binary uploaded"
 
-
-    errorMessage=""
 
 
     # Update the entry in the DynamoDB table
@@ -84,6 +85,8 @@ if [ -n "$message" ]; then
             }"
         dbupdate_updateExpression="SET linkS3 = :l REMOVE compiling, errorMessage"
     else
+        # Escape all the bad character in the error message
+        errorMessage=$(echo $errorMessage | sed 's/\"/\\\"/g')
         dbupdate_expressionAttributeValues=" \
             { \
                 \":em\": { \
@@ -105,7 +108,6 @@ if [ -n "$message" ]; then
     # Delete message
     aws sqs delete-message --queue-url $queueUrl --receipt-handle $receiptHandle
     echo "SQS message deleted"
-    echo "test4"
 
 else
     echo "Not any message for now..."
