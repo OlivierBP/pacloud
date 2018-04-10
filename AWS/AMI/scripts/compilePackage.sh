@@ -36,7 +36,8 @@ if [ -n "$message" ]; then
     body=$(echo $message | jq -r '.Messages[].Body')
 
     package=$(echo $body | sed 's/\-[0-9].*//')
-    version=$(echo $body | sed 's/.*-//')
+    packageReg=$(echo $package | sed 's/\//\\\//')
+    version=$(echo $body | sed "s/$packageReg-//")
    
     # Before compile, set the make.conf
     /pacloud/AMI/scripts/setMakeConf.sh
