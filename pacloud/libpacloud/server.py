@@ -23,6 +23,5 @@ def download_package(package_name, version):
 def download_db():
     return urllib.request.urlopen('{}/database/'.format(SERVER_URL)).read().decode('utf-8')
 
-if __name__ == "__main__":
-    download_package("example", "2.4")
-
+def download_category(url):
+    return urllib.request.urlopen(url).read().decode('utf-8')
