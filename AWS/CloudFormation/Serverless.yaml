@@ -87,16 +87,16 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - 'dynamodb:BatchGetItem'
-                  - 'dynamodb:BatchWriteItem'
+                  # - 'dynamodb:BatchGetItem'
+                  # - 'dynamodb:BatchWriteItem'
                   - 'dynamodb:PutItem'
-                  - 'dynamodb:DescribeTable'
-                  - 'dynamodb:DeleteItem'
+                  # - 'dynamodb:DescribeTable'
+                  # - 'dynamodb:DeleteItem'
                   - 'dynamodb:GetItem'
-                  - 'dynamodb:Scan'
-                  - 'dynamodb:Query'
-                  - 'dynamodb:UpdateItem'
-                  - 'dynamodb:UpdateTable'
+                  # - 'dynamodb:Scan'
+                  # - 'dynamodb:Query'
+                  # - 'dynamodb:UpdateItem'
+                  # - 'dynamodb:UpdateTable'
                 Resource:
                   - 'arn:aws:dynamodb:*:*:table/*/index/*'
                   - !ImportValue DynamoDbPackagesArn
