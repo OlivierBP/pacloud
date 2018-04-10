@@ -15,53 +15,111 @@ AWS.config.update({region: 'eu-west-1'});   // Set the region
 const sqs = new AWS.SQS();
 const QueueName = 'QueueToCompile';         // Name of the queue
 
+const dynamodb = new AWS.DynamoDB();
+const TableName = 'PacloudPackages';        // Name of the DynamoDB table
+
+
 // Function called when the Lambda function is called
 exports.lambda_handler = (event, context, callback) => {
 
-    // TODO: test if the package exist in DynamoDB, if yes, return the URL of the binaries to download it
+    // Test if a name was sent
+    if (! event.name){
+        callback('ERROR: Not any name given');
+    }
+    else{
+        let params_getQueueUrl = {
+            QueueName: QueueName
+        };
+        // Retrieve the queue from its name
+        sqs.getQueueUrl(params_getQueueUrl, function(err, data_getQueueUrl) {
+            if (err){
+                console.log('Failed to get the SQS queue:', err, err.stack);
+            }
+            else {
+                let name = event.name.match(/(.*)-[0-9]+\./)[1]
+                let version = event.name.match(/.*-([0-9]+\..*)/)[1]
 
-    let params_getQueueUrl = {
-        QueueName: QueueName
-      };
-    // Retrieve the queue from its name
-    sqs.getQueueUrl(params_getQueueUrl, function(err, data) {
-        if (err){
-            // an error occurred
-            console.log('Failed to get the SQS queue');
-            console.log(err, err.stack);
-        }
-        else {
-            // successful response
-            console.log('Got the SQS queue');
-            console.log(data);
-            console.log(data.QueueUrl);
+                let params_getItem = {
+                        Key: {
+                            "name": {
+                                S: name
+                            }, 
+                            "version": {
+                                S: version
+                            }
+                        }, 
+                    TableName: TableName
+                };
+                // Search the item in DynamoDB
+                dynamodb.getItem(params_getItem, function(err, data_getItem) {
+                    if (err) {
+                        console.log('Failed to get an item from dynamodb:', err, err.stack);
+                    }
+                    else{
+                        // WAIT: No item, request a compilation
+                        if (! data_getItem.hasOwnProperty('Item')){
+                            let params_sendMessage = {
+                                MessageBody: event.name,
+                                QueueUrl: data_getQueueUrl.QueueUrl,
+                                DelaySeconds: 0
+                            };
+                            // Send the compilation request in the SQS queue
+                            sqs.sendMessage(params_sendMessage, function(err, data_sendMessage) {
+                                if (err){
+                                    console.log('Failed to send the message in the SQS queue:', err, err.stack);
+                                } 
+                                else{
+                                    var params_putItem = {
+                                        Item: {
+                                            "name": {
+                                                S: name
+                                            }, 
+                                            "version": {
+                                                S: version
+                                            }, 
+                                            "compiling": {
+                                                S: String(Date.now())
+                                            }
+                                        }, 
+                                        TableName: TableName
+                                       };
+                                       // Put a line for this package in the DynamoDB table
+                                       dynamodb.putItem(params_putItem, function(err, data_putItem) {
+                                         if (err){
+                                             console.log('Failed to insert in the DynamoDB table:', err, err.stack);
+                                         }
+                                         else{
+                                            const response = {status: "WAIT"};
+                                            callback(null, response);
+                                         }
+                                    });
+                                }
+                            });
+                        }
 
-            let params_sendMessage = {
-                MessageBody: event.name,
-                QueueUrl: data.QueueUrl,
-                DelaySeconds: 0
-            };
-            // Send the message
-            sqs.sendMessage(params_sendMessage, function(err, data) {
-                if (err){
-                    // an error occurred when sending the message
-                    console.log('an error occurred when sending the message');
-                    console.log(err, err.stack);
-                } 
-                else{
-                    // successful response
-                    console.log('Message sent successfully')
-                    console.log(data);
+                        // SUCCESS: Package already compiled, return the S3 URL
+                        else if (data_getItem.Item.hasOwnProperty('linkS3')){
+                            const response = {status: "SUCCESS", linkS3: data_getItem.Item.linkS3.S};
+                            callback(null, response);
+                        }
 
-                    // TODO remove these lines
-                    console.log('Event:', JSON.stringify(event));
-                    const name = event.name || 'NONE';
-                    const response = {response: `You requested the package ${name}`};
-                    callback(null, response);
+                        // WAIT: Package already requested for compilation
+                        else if (data_getItem.Item.hasOwnProperty('compiling')){
+                            const response = {status: "WAIT"};
+                            callback(null, response);
+                        }
 
-                }
-            });
-        }
-    });
+                        // FAILED: The package failed to compile
+                        else if (data_getItem.Item.hasOwnProperty('errorMessage')){
+                            const response = {status: "FAILED", errorMessage: data_getItem.Item.errorMessage.S};
+                            callback(null, response);
+                        }
 
+                    } // dynamodb.getItem error?
+                }); // dynamodb.getItem
+
+            } //sqs.getQueueUrl error?
+        }); //sqs.getQueueUrl
+
+    } // Test if name given
 };

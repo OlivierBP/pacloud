@@ -81,13 +81,27 @@ Resources:
                   - sqs:SendMessage
                   - sqs:GetQueueUrl
                 Resource: !GetAtt QueueToCompile.Arn
+        - 
+          PolicyName: DynamoDbGetPutLambda
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:BatchGetItem'
+                  - 'dynamodb:BatchWriteItem'
+                  - 'dynamodb:PutItem'
+                  - 'dynamodb:DescribeTable'
+                  - 'dynamodb:DeleteItem'
+                  - 'dynamodb:GetItem'
+                  - 'dynamodb:Scan'
+                  - 'dynamodb:Query'
+                  - 'dynamodb:UpdateItem'
+                  - 'dynamodb:UpdateTable'
+                Resource:
+                  - 'arn:aws:dynamodb:*:*:table/*/index/*'
+                  - !ImportValue DynamoDbPackagesArn
 
-  # LambdaPackageRequestRoleInstanceProfile: 
-  #   Type: "AWS::IAM::InstanceProfile"
-  #   Properties: 
-  #     Path: "/"
-  #     Roles: 
-  #       - !Ref LambdaPackageRequestRole
+
 
 
   ################## LAMBDA SYNC CLIENT DB ##################
