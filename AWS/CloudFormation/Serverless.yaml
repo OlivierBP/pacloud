@@ -372,7 +372,7 @@ Outputs:
         - .execute-api.
         - !Ref 'AWS::Region'
         - .amazonaws.com
-        - /LATEST/package?name=packagename
+        - /LATEST/package?name=app-text/tree-1.7.0
   ApiSyncClientDbUrl:
     Description: Url to sync the package database
     Value: !Join 
