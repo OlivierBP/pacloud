@@ -3,3 +3,6 @@
 *.swp
 **/issueReportCF
 **/supportIssues
+**/Cron/gentoo
+**/Cron/converdb.sh
+**/Cron/db.json

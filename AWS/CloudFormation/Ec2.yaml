@@ -113,7 +113,9 @@ Mappings:
       Arch: '64'
   SpotInstanceRegionArch2AMI:
     eu-west-1:
-      '64': ami-05461d7c
+      '64': ami-f8b7ec81
+      # '64': ami-49b0eb30
+      # '64': ami-05461d7c
       # '64': ami-44dc843d
       # '64': ami-19104d60
       # '64': ami-7714490e
@@ -279,6 +281,25 @@ Resources:
                   - 'sqs:GetQueueUrl'
                   - 'sqs:ReceiveMessage'
                 Resource: !Ref QueueToCompileArn
+        - PolicyName: DynamoDbGetPut
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:BatchGetItem'
+                  - 'dynamodb:BatchWriteItem'
+                  - 'dynamodb:PutItem'
+                  - 'dynamodb:DescribeTable'
+                  - 'dynamodb:DeleteItem'
+                  - 'dynamodb:GetItem'
+                  - 'dynamodb:Scan'
+                  - 'dynamodb:Query'
+                  - 'dynamodb:UpdateItem'
+                  - 'dynamodb:UpdateTable'
+                Resource:
+                  - 'arn:aws:dynamodb:*:*:table/*/index/*'
+                  - !ImportValue DynamoDbPackagesArn
+
 
   PacloudEc2WorkerInstanceProfile: 
     Type: "AWS::IAM::InstanceProfile"

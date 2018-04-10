@@ -1,0 +1,57 @@
+# Pacloud project
+# DynamoDB
+# https://github.com/OlivierBP/Pacloud
+# Created 2018-04-09 by BAL-PETRE Olivier
+# License MIT 
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Creation of the DynamoDB database for the packages
+
+
+Parameters:
+  TableName:
+    Description: Name of the DynamoDB table
+    Type: String
+    Default: PacloudPackages
+  
+
+Resources:
+  PackagesTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions: 
+        - 
+          AttributeName: "name"
+          AttributeType: "S"
+        - 
+          AttributeName: "version"
+          AttributeType: "S"
+      KeySchema: 
+        - 
+          AttributeName: "name"
+          KeyType: "HASH"
+        - 
+          AttributeName: "version"
+          KeyType: "RANGE"
+      ProvisionedThroughput: 
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      SSESpecification:
+        SSEEnabled: true
+      TableName: !Ref TableName
+      Tags:
+      - Key: Project
+        Value: Pacloud
+
+
+Outputs:
+  TableName:
+    Description: Name of the DynamoDB table
+    Value: !Ref TableName
+    
+  TableNameArn:
+    Value: !GetAtt PackagesTable.Arn
+    Description: Arn of the DynamoDB storing the packages informations
+    Export:
+      Name: DynamoDbPackagesArn
