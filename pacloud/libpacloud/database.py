@@ -9,7 +9,10 @@ PACKAGE_DIR = lambda pkg_name: '{}{}'.format(DB_DIR, pkg_name)
 METADATA_FILE = lambda pkg_name: '{}/metadata.json'.format(PACKAGE_DIR(pkg_name))
 
 def list_packages():
-    return os.listdir(DB_DIR)
+    list = []
+    for folder in os.listdir(DB_DIR):
+        list.extend(['{}/{}'.format(folder, subfolder) for subfolder in os.listdir('{}/{}'.format(DB_DIR, folder))])
+    return sorted(list)
 
 def info_package(package_name):
     return json.load(open(METADATA_FILE(package_name), 'r'))
@@ -17,7 +20,7 @@ def info_package(package_name):
 def list_dependencies(package_name, version=None):
     versions = info_package(package_name)["versions"]
     if(version == None):
-        return versions[0]["dependencies"]
+        return versions[-1]["dependencies"]
     else:
         for v in versions:
             if(v["number"] == version):

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 function convert() {
+	local CATEGORY=$(echo $1 | awk -F"/" '{print $(NF-1)}')
 	local NAME=$(echo $1 | awk -F"/" '{print $NF}')
 	local versions=()
 	local deps=()
@@ -19,8 +20,8 @@ function convert() {
 		dep=""
 		[[ "$RDEPEND" == "" ]] || { # Checking that the dependencies are not null
 			while read depline; do
-				[[ "$depline" =~ "?" || "$depline" =~ "||" ]] && ((usedep += $(echo $depline | grep -o '?\|||' | wc -l))) # usedep incremented by the number of ? or || (characters opening braces)
-				[[ "$depline" =~ ")" ]] && ((usedep -= $(echo $depline | grep -o ')' | wc -l))) # usedep decremented by the number of )
+				[[ "$depline" =~ "?" || "$depline" =~ "||" ]] && ((usedep += $(echo $depline | tr -dc '?|' | sed 's/||/|/' | wc -c))) # usedep incremented by the number of ? or || (characters opening braces)
+				[[ "$depline" =~ ")" ]] && ((usedep -= $(echo $depline | tr -dc ')' | wc -c))) # usedep decremented by the number of )
 				#[[ "$depline" =~ "?" || "$depline" =~ "||" ]] && ((usedep++)); echo $usedep
 				#[[ "$depline" =~ ")" ]] && ((usedep--)) && echo $usedep
 				[[ "$dep" == "" ]] && dep="$depline" || dep="${dep} $depline"
@@ -33,7 +34,7 @@ function convert() {
 	done
 
 	METADATA="{
-		\"name\": \"$NAME\",
+		\"name\": \"$CATEGORY/$NAME\",
 		\"description\": \""$(echo $DESCRIPTION | sed 's/\"/\\"/g')"\",
 		\"versions\": ["
 	for (( i=0; i<${#versions[@]}; i++ )); do
