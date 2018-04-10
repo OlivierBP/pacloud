@@ -1,6 +1,7 @@
 #!/bin/bash
 
 function convert() {
+	local CATEGORY=$(echo $1 | awk -F"/" '{print $(NF-1)}')
 	local NAME=$(echo $1 | awk -F"/" '{print $NF}')
 	local versions=()
 	local deps=()
@@ -33,7 +34,7 @@ function convert() {
 	done
 
 	METADATA="{
-		\"name\": \"$NAME\",
+		\"name\": \"$CATEGORY/$NAME\",
 		\"description\": \""$(echo $DESCRIPTION | sed 's/\"/\\"/g')"\",
 		\"versions\": ["
 	for (( i=0; i<${#versions[@]}; i++ )); do
