@@ -60,9 +60,22 @@ def update():
 
 def install(arg):
     version = None
+    if ('/' in arg):
+        category = arg[:arg.find('/'):]
+        arg = arg[arg.find('/')+1:]
+    else:
+        category = ""
     if('-' in arg):
         version = arg[arg.find('-')+1:]
         arg = arg[:arg.find('-'):]
+    if(category != ""):
+        arg = "{}/{}".format(category, arg)
+    packages = libpacloud.search(arg)
+    if(len(packages) != 1):
+        print("Error: ambiguous package search")
+        return -1
+    else:
+        arg = packages[0]["name"]
     print("Resolving dependencies...\n")
     dependencies_list = libpacloud.list_dependencies(arg, version)
     strdep = "Packages ({}):".format(len(dependencies_list))

@@ -17,15 +17,24 @@ def list_packages():
 def info_package(package_name):
     return json.load(open(METADATA_FILE(package_name), 'r'))
 
+def _parse_dependencies(list, dep):
+    if '(' not in dep:
+        list.append(dep)
+
 def list_dependencies(package_name, version=None):
     versions = info_package(package_name)["versions"]
+    dependencies = []
+    list = []
     if(version == None):
-        return versions[-1]["dependencies"]
+        dependencies = versions[-1]["dependencies"]
     else:
         for v in versions:
             if(v["number"] == version):
-                return v["dependencies"]
-    return []
+                dependencies = v["dependencies"]
+                break
+    for dep in dependencies:
+        _parse_dependencies(list, dep)
+    return list
 
 def installed_version(package_name):
     try:
