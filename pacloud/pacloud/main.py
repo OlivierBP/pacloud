@@ -2,6 +2,7 @@
 
 import argparse
 import libpacloud
+import re
 
 def main():
     parser = argparse.ArgumentParser()
@@ -60,19 +61,17 @@ def update():
 
 def install(arg):
     version = None
-    if ('/' in arg):
-        category = arg[:arg.find('/'):]
-        arg = arg[arg.find('/')+1:]
-    else:
-        category = ""
-    if('-' in arg):
-        version = arg[arg.find('-')+1:]
-        arg = arg[:arg.find('-'):]
-    if(category != ""):
-        arg = "{}/{}".format(category, arg)
+    version_check = re.search('-[0-9]', arg)
+    if(version_check != None):
+        pos = version_check.start()
+        version = arg[pos+1:]
+        arg = arg[:pos:]
     packages = libpacloud.search(arg)
     if(len(packages) != 1):
         print("Error: ambiguous package search")
+        print("Found packages:")
+        for package in packages:
+            print(package["name"])
         return -1
     else:
         arg = packages[0]["name"]
