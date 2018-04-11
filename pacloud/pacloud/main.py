@@ -68,11 +68,12 @@ def install(arg):
         arg = arg[:pos:]
     packages = libpacloud.search(arg)
     if(len(packages) != 1):
-        print("Error: ambiguous package search")
-        print("Found packages:")
-        for package in packages:
-            print(package["name"])
-        return -1
+        if(arg not in libpacloud.list_packages()):
+            print("Error: ambiguous package search")
+            print("Found packages:")
+            for package in packages:
+                print(package["name"])
+            return -1
     else:
         arg = packages[0]["name"]
     print("Resolving dependencies...\n")

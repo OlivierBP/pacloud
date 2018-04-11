@@ -24,7 +24,7 @@ def list_dependencies(package_name, version=None):
             if dep not in list and package_name not in list:
                 check_dep(dep)
             if package_name not in list:
-                list.append(package_name) 
+                list.append(package_name)
 
     check_dep(package_name)
     return list
@@ -33,7 +33,7 @@ def list_dependencies(package_name, version=None):
 
 def install(package_name, version=None):
     if(version == None):
-        version = db.info_package(package_name)["versions"][0]["number"]
+        version = db.info_package(package_name)["versions"][-1]["number"]
     package_path = "{}/{}/{}-{}.tbz2".format(DB_DIR, package_name, package_name, version)
     if(not os.path.isfile(package_path)):
         print("Downloading {}-{}...".format(package_name, version), end="")
