@@ -3,7 +3,7 @@
 import libpacloud.database as db
 from libpacloud.install import install
 
-def update_all():
+def upgrade():
   list = db.list_packages()
   list_dep = []
   for package in list:

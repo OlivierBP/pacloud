@@ -17,15 +17,25 @@ def list_packages():
 def info_package(package_name):
     return json.load(open(METADATA_FILE(package_name), 'r'))
 
+def _parse_dependencies(list, dep):
+    if '(' not in dep:
+        list.append(dep)
+
 def list_dependencies(package_name, version=None):
     versions = info_package(package_name)["versions"]
+    dependencies = []
+    list = []
     if(version == None):
-        return versions[-1]["dependencies"]
+        dependencies = versions[-1]["dependencies"]
     else:
         for v in versions:
             if(v["number"] == version):
-                return v["dependencies"]
-    return []
+                dependencies = v["dependencies"]
+                break
+    for dep in dependencies:
+        _parse_dependencies(list, dep)
+    print(list)
+    return list
 
 def installed_version(package_name):
     try:
@@ -94,3 +104,14 @@ def _remove_required_by(package_name, required_by):
     metadata['required_by'].remove(required_by)
     _rewrite_metadata(package_name, metadata)
 
+def add_files_list(package_name, files_list):
+    tree = open(PACKAGE_DIR(package_name) + '/tree', 'w')
+    for file in files_list:
+        tree.write(file + '\n')
+    tree.close()
+
+def list_files(package_name):
+    tree = open(PACKAGE_DIR(package_name) + '/tree', 'r')
+    files = [x.strip() for x in tree.readlines()]
+    tree.close()
+    return files
