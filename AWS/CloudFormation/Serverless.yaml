@@ -87,16 +87,16 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - 'dynamodb:BatchGetItem'
-                  - 'dynamodb:BatchWriteItem'
+                  # - 'dynamodb:BatchGetItem'
+                  # - 'dynamodb:BatchWriteItem'
                   - 'dynamodb:PutItem'
-                  - 'dynamodb:DescribeTable'
-                  - 'dynamodb:DeleteItem'
+                  # - 'dynamodb:DescribeTable'
+                  # - 'dynamodb:DeleteItem'
                   - 'dynamodb:GetItem'
-                  - 'dynamodb:Scan'
-                  - 'dynamodb:Query'
-                  - 'dynamodb:UpdateItem'
-                  - 'dynamodb:UpdateTable'
+                  # - 'dynamodb:Scan'
+                  # - 'dynamodb:Query'
+                  # - 'dynamodb:UpdateItem'
+                  # - 'dynamodb:UpdateTable'
                 Resource:
                   - 'arn:aws:dynamodb:*:*:table/*/index/*'
                   - !ImportValue DynamoDbPackagesArn
@@ -372,7 +372,7 @@ Outputs:
         - .execute-api.
         - !Ref 'AWS::Region'
         - .amazonaws.com
-        - /LATEST/package?name=packagename
+        - /LATEST/package?name=app-text/tree-1.7.0
   ApiSyncClientDbUrl:
     Description: Url to sync the package database
     Value: !Join 

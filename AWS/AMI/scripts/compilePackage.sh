@@ -30,8 +30,6 @@ if [ -n "$message" ]; then
     aws sqs change-message-visibility --queue-url $queueUrl --visibility-timeout 600 --receipt-handle $receiptHandle
     echo "Message visibility changed"
 
-    # TODO put a lock in DynamoDB too
-
     #echo $message | jq -r '.Messages[].Body'
     body=$(echo $message | jq -r '.Messages[].Body')
 
@@ -41,9 +39,21 @@ if [ -n "$message" ]; then
    
     # Before compile, set the make.conf
     /pacloud/AMI/scripts/setMakeConf.sh
-    # Compilation in a subprocess
-    #/pacloud/AMI/scripts/compilePackageSubProcess.sh $package 
-    emerge --buildpkgonly  =$package-$version
+    
+    errorMessage=""
+    # Compilation in a background process and redirect all the errors in $errorMessage
+#ERROR=$(./useless.sh 2>&1 >/dev/null)
+    errorMessage=$(/pacloud/AMI/scripts/emergeCommand.sh $package $version 2>&1 >/dev/null &)
+    [[ ! -z $errorMessage ]] && echo "Error compilation: $errorMessage"
+    # PID of the background process
+    PROC_ID=$!
+
+    # While compiling, each 10 sec, reinitialise the visibility-timeout to 10 min
+    while kill -0 "$PROC_ID" > /dev/null 2>&1; do
+        echo "Package compiling"
+        sleep 10
+        aws sqs change-message-visibility --queue-url $queueUrl --visibility-timeout 600 --receipt-handle $receiptHandle
+    done
     echo "Package compiled"
 
     # Upload the binary in S3
@@ -52,20 +62,48 @@ if [ -n "$message" ]; then
     aws s3 cp /usr/portage/packages/$parentFolder/$packageFolder.tbz2 s3://$bucketName/ --acl public-read
     echo "Binary uploaded"
 
-    # Add the S3 link of the package in the DynamoDb table
-    item="{ \
-               \"name\": { \
-                    \"S\": \"$package\" \
-                }, \
-                \"version\": { \
-                    \"S\": \"$version\" \
-                }, \
-                \"linkS3\": { \
+
+
+    # Update the entry in the DynamoDB table
+    dbupdate_key=" \
+        { \
+            \"name\": { \
+                \"S\": \"$package\" \
+            }, \
+            \"version\": { \
+                \"S\": \"$version\" \
+            } \
+        }"
+
+    # If $errorMessage is empty 
+    if [[ -z $errorMessage ]]; then
+        dbupdate_expressionAttributeValues=" \
+            { \
+                \":l\": { \
                     \"S\": \"https://s3-eu-west-1.amazonaws.com/$bucketName/$packageFolder.tbz2\" \
                 } \
-         }"
-    aws dynamodb put-item --table-name $dynamoDbTableName --item "$item"
-    echo "Link added in the DynamoDb table"
+            }"
+        dbupdate_updateExpression="SET linkS3 = :l REMOVE compiling, errorMessage"
+    else
+        # Escape all the bad character in the error message
+        errorMessage=$(echo $errorMessage | sed 's/\"/\\\"/g')
+        dbupdate_expressionAttributeValues=" \
+            { \
+                \":em\": { \
+                    \"S\": \"$errorMessage\" \
+                } \
+            }"
+        dbupdate_updateExpression="SET errorMessage = :em REMOVE compiling, linkS3"
+    fi
+    
+    aws dynamodb update-item \
+        --table-name $dynamoDbTableName\
+        --key "$dbupdate_key" \
+        --update-expression "$dbupdate_updateExpression" \
+        --expression-attribute-values "$dbupdate_expressionAttributeValues"
+    
+
+    echo "Entry updated in the DynamoDb table"
 
     # Delete message
     aws sqs delete-message --queue-url $queueUrl --receipt-handle $receiptHandle
@@ -75,4 +113,3 @@ else
     echo "Not any message for now..."
 fi
     
-

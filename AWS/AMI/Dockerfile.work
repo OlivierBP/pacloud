@@ -1,6 +1,7 @@
-# This Dockerfile create the container for worker for the project Pacloud
+# This Dockerfile allow to modify the container building it without have to rebuild all the container to can test
+# It's a modified copy of the Dockerfile
 
-FROM gentoo/stage3-amd64
+FROM olivierbp/pacloud:latest
 
 # Copy the scripts from the local machine
 COPY scripts/ /pacloud/AMI/scripts/
@@ -10,17 +11,17 @@ RUN chmod a+x /pacloud/AMI/scripts/setMakeConf.sh
 RUN /pacloud/AMI/scripts/setMakeConf.sh
 
 # Update all and install the software needed
-RUN emerge-webrsync \
-&& emerge \
-app-misc/jq \
-dev-python/pip
+#RUN emerge-webrsync \
+#&& emerge \
+#app-misc/jq \
+#dev-python/pip
 
 # Install aws cli with pip
-RUN pip install awscli --user \
-&& ln -s /root/.local/bin/aws /bin/aws 
+#RUN pip install awscli --user \
+#&& ln -s /root/.local/bin/aws /bin/aws 
 
 # Configure awscli
-RUN aws configure set region eu-west-1
+#RUN aws configure set region eu-west-1
 
 # Run the job
 ENTRYPOINT ["/pacloud/AMI/scripts/compilePackage.sh"]
@@ -28,7 +29,7 @@ ENTRYPOINT ["/pacloud/AMI/scripts/compilePackage.sh"]
 
 # Build this container with
 # cd /pacloud/AMI/
-# docker build -f /pacloud/AMI/Dockerfile -t olivierbp/pacloud .
+# docker build -f /pacloud/AMI/Dockerfile.work -t olivierbp/pacloud .
 # docker images
 # docker run --rm --cap-add=SYS_PTRACE olivierbp/pacloud:latest
 
