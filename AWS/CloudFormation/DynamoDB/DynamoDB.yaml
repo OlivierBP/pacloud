@@ -22,17 +22,17 @@ Resources:
     Properties:
       AttributeDefinitions: 
         - 
-          AttributeName: "name"
+          AttributeName: "package"
           AttributeType: "S"
         - 
-          AttributeName: "version"
+          AttributeName: "useflagCompiled"
           AttributeType: "S"
       KeySchema: 
         - 
-          AttributeName: "name"
+          AttributeName: "package"
           KeyType: "HASH"
         - 
-          AttributeName: "version"
+          AttributeName: "useflagCompiled"
           KeyType: "RANGE"
       ProvisionedThroughput: 
         ReadCapacityUnits: "5"

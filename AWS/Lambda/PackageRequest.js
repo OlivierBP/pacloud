@@ -4,8 +4,8 @@
 // Created 2018-03-21 by BAL-PETRE Olivier
 // License MIT 
 
-// Official documentation
-// https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SQS.html#sendMessage-property
+// Official documentation javascript SDK
+// https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/
 
 'use strict';
 
@@ -23,8 +23,8 @@ const TableName = 'PacloudPackages';        // Name of the DynamoDB table
 exports.lambda_handler = (event, context, callback) => {
 
     // Test if a name was sent
-    if (! event.name){
-        callback('ERROR: Not any name given');
+    if (! event.package){
+        callback('ERROR: Not any package given');
     }
     else{
         let params_getQueueUrl = {
@@ -36,16 +36,20 @@ exports.lambda_handler = (event, context, callback) => {
                 console.log('Failed to get the SQS queue:', err, err.stack);
             }
             else {
-                let name = event.name.match(/(.*)-[0-9]+\./)[1]
-                let version = event.name.match(/.*-([0-9]+\..*)/)[1]
+                let packageExpression = event.package;
+                let nameLong = packageExpression.match(/(.*)-[0-9]+\./)[1];
+                let category = packageExpression.match(/(.*)\//)[1];
+                let nameShort = packageExpression.match(/.*\/(.*)-[0-9]+\./)[1];
+                let version = packageExpression.match(/.*-([0-9]+\..*)/)[1];
+                let useflag = event.useflag || " ";
 
                 let params_getItem = {
                         Key: {
-                            "name": {
-                                S: name
+                            "package": {
+                                S: packageExpression
                             }, 
-                            "version": {
-                                S: version
+                            "useflagCompiled": {
+                                S: useflag
                             }
                         }, 
                     TableName: TableName
@@ -56,10 +60,20 @@ exports.lambda_handler = (event, context, callback) => {
                         console.log('Failed to get an item from dynamodb:', err, err.stack);
                     }
                     else{
-                        // WAIT: No item, request a compilation
+                        // WAIT: No item, or not with the good useflags, request a compilation
                         if (! data_getItem.hasOwnProperty('Item')){
+                            let messageBody = JSON.stringify(
+                                {
+                                    "packageExpression": packageExpression,
+                                    "nameLong": nameLong,
+                                    "category": category,
+                                    "nameShort": nameShort,
+                                    "version": version,
+                                    "useflag": useflag
+                                }
+                            )
                             let params_sendMessage = {
-                                MessageBody: event.name,
+                                MessageBody: messageBody,
                                 QueueUrl: data_getQueueUrl.QueueUrl,
                                 DelaySeconds: 0
                             };
@@ -71,12 +85,12 @@ exports.lambda_handler = (event, context, callback) => {
                                 else{
                                     var params_putItem = {
                                         Item: {
-                                            "name": {
-                                                S: name
+                                            "package": {
+                                                S: packageExpression
                                             }, 
-                                            "version": {
-                                                S: version
-                                            }, 
+                                            "useflagCompiled": {
+                                                S: useflag
+                                            },
                                             "compiling": {
                                                 S: String(Date.now())
                                             }

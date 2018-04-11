@@ -27,23 +27,26 @@ if [ -n "$message" ]; then
     receiptHandle=$(echo $message | jq -r '.Messages[].ReceiptHandle')
 
     # Change visibility timeout for 10 min
-    aws sqs change-message-visibility --queue-url $queueUrl --visibility-timeout 600 --receipt-handle $receiptHandle
+    aws sqs change-message-visibility \
+        --queue-url $queueUrl \
+        --visibility-timeout 600 \
+        --receipt-handle $receiptHandle
     echo "Message visibility changed"
 
-    #echo $message | jq -r '.Messages[].Body'
     body=$(echo $message | jq -r '.Messages[].Body')
+    packageExpression=$(echo $body | jq -r '.packageExpression')    # app-misc/ranger-1.8.1
+    nameLong=$(echo $body | jq -r '.nameLong')                      # app-misc/ranger
+    category=$(echo $body | jq -r '.category')                      # app-misc
+    nameShort=$(echo $body | jq -r '.nameShort')                    # ranger
+    version=$(echo $body | jq -r '.version')                        # 1.8.1
+    useflag=$(echo $body | jq -r '.useflag')                        # 
 
-    package=$(echo $body | sed 's/\-[0-9].*//')
-    packageReg=$(echo $package | sed 's/\//\\\//')
-    version=$(echo $body | sed "s/$packageReg-//")
-   
     # Before compile, set the make.conf
     /pacloud/AMI/scripts/setMakeConf.sh
     
     errorMessage=""
     # Compilation in a background process and redirect all the errors in $errorMessage
-#ERROR=$(./useless.sh 2>&1 >/dev/null)
-    errorMessage=$(/pacloud/AMI/scripts/emergeCommand.sh $package $version 2>&1 >/dev/null &)
+    errorMessage=$(/pacloud/AMI/scripts/emergeCommand.sh $nameLong $version $useflag 2>&1 >/dev/null &)
     [[ ! -z $errorMessage ]] && echo "Error compilation: $errorMessage"
     # PID of the background process
     PROC_ID=$!
@@ -57,9 +60,7 @@ if [ -n "$message" ]; then
     echo "Package compiled"
 
     # Upload the binary in S3
-    packageFolder=$(echo $body | sed 's/.*\///')
-    parentFolder=$(echo $body | sed 's/\/.*//')
-    aws s3 cp /usr/portage/packages/$parentFolder/$packageFolder.tbz2 s3://$bucketName/ --acl public-read
+    aws s3 cp /usr/portage/packages/$packageExpression.tbz2 s3://$bucketName/ --acl public-read
     echo "Binary uploaded"
 
 
@@ -67,11 +68,11 @@ if [ -n "$message" ]; then
     # Update the entry in the DynamoDB table
     dbupdate_key=" \
         { \
-            \"name\": { \
-                \"S\": \"$package\" \
+            \"package\": { \
+                \"S\": \"$packageExpression\" \
             }, \
-            \"version\": { \
-                \"S\": \"$version\" \
+            \"useflagCompiled\": { \
+                \"S\": \"$useflag\" \
             } \
         }"
 
@@ -80,7 +81,7 @@ if [ -n "$message" ]; then
         dbupdate_expressionAttributeValues=" \
             { \
                 \":l\": { \
-                    \"S\": \"https://s3-eu-west-1.amazonaws.com/$bucketName/$packageFolder.tbz2\" \
+                    \"S\": \"https://s3-eu-west-1.amazonaws.com/$bucketName/$packageExpression.tbz2\" \
                 } \
             }"
         dbupdate_updateExpression="SET linkS3 = :l REMOVE compiling, errorMessage"

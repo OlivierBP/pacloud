@@ -34,6 +34,6 @@ ENTRYPOINT ["/pacloud/AMI/scripts/compilePackage.sh"]
 
 # To commit and push
 # docker login --username olivierbp
-# docker commit -a "olivierbp" -m "message" containerId olivier/pacloud:tags
+# docker commit -a "olivierbp" -m "message" containerId olivierbp/pacloud:tags
 # docker push olivierbp/pacloud:tags
 
