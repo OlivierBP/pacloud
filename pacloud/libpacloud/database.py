@@ -34,6 +34,7 @@ def list_dependencies(package_name, version=None):
                 break
     for dep in dependencies:
         _parse_dependencies(list, dep)
+    print(list)
     return list
 
 def installed_version(package_name):
@@ -103,3 +104,14 @@ def _remove_required_by(package_name, required_by):
     metadata['required_by'].remove(required_by)
     _rewrite_metadata(package_name, metadata)
 
+def add_files_list(package_name, files_list):
+    tree = open(PACKAGE_DIR(package_name) + '/tree', 'w')
+    for file in files_list:
+        tree.write(file + '\n')
+    tree.close()
+
+def list_files(package_name):
+    tree = open(PACKAGE_DIR(package_name) + '/tree', 'r')
+    files = [x.strip() for x in tree.readlines()]
+    tree.close()
+    return files
