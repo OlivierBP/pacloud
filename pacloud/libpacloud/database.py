@@ -91,7 +91,7 @@ def mark_as_installed(package_name, version):
     metadata['installed'] = version
     for available_version in metadata['versions']:
         if(available_version['number'] == version):
-            for dependency in available_version['dependencies']:
+            for dependency in list_dependencies(package_name, version):
                 dependency_name = dependency#[:max(-1,min(dependency.find('>'), dependency.find('=')))]
                 _mark_as_required_by(dependency_name, package_name)
     _rewrite_metadata(package_name, metadata)
@@ -99,11 +99,9 @@ def mark_as_installed(package_name, version):
 
 def mark_as_uninstalled(package_name):
     metadata = info_package(package_name)
-    for available_version in metadata['versions']:
-        if(available_version['number'] == metadata['installed']):
-            for dependency in available_version['dependencies']:
-                dependency_name = dependency#[:max(-1,min(dependency.find('>'), dependency.find('=')))]
-                _remove_required_by(dependency_name, package_name)
+    for dependency in list_dependencies(package_name, installed_version(package_name)):
+        dependency_name = dependency#[:max(-1,min(dependency.find('>'), dependency.find('=')))]
+        _remove_required_by(dependency_name, package_name)
     metadata.pop('installed', None)
     _rewrite_metadata(package_name, metadata)
 

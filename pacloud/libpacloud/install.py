@@ -35,7 +35,6 @@ def install(package_name, version=None):
     if(version == None):
         version = db.info_package(package_name)["versions"][-1]["number"]
     package_path = "{}/{}/{}-{}.tbz2".format(DB_DIR, package_name, package_name[package_name.find('/')+1:], version)
-    print(package_path)
     if(not os.path.isfile(package_path)):
         print("Downloading {}-{}...".format(package_name, version), end="")
         download_package(package_name, version)

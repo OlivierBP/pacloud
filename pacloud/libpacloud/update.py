@@ -9,7 +9,11 @@ def update():
     packages = db.list_packages()
     for line in download_db().splitlines():
         print(line, end="")
-        new_db = json.loads(download_category(line), strict=False)
+        try:
+            new_db = json.loads(download_category(line), strict=False)
+        except json.decoder.JSONDecodeError:
+            print(' failed!')
+            continue
         print(' downloaded')
         # Adding new packages and modifying existing ones
         for package in new_db:
