@@ -41,7 +41,9 @@ def install(package_name, version=None):
         download_package(package_name, version)
     tar = tarfile.open(package_path)
 
+    # Create list of files that are installed
     rem = tar.getnames()
+    rem = [x[1:] for x in rem]
     db.add_files_list(package_name, rem)
 
     tar.extractall('/tmp/{}'.format(package_name))
