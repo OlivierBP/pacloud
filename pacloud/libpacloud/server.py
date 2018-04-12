@@ -2,6 +2,7 @@
 
 import urllib.request
 import urllib.parse
+import json
 
 from libpacloud.config import SERVER_URL, DB_DIR, USE
 
@@ -18,12 +19,17 @@ def _download(url):
 
 def _get_package_url(package_name, version):
     params = urllib.parse.urlencode({'package': package_name, 'version': version, 'useflag': urllib.parse.quote(USE)})
-    res = _download('{}/LATEST/package?{}'.format(SERVER_URL, params))
+    res = json.loads(_download('{}/LATEST/package?{}'.format(SERVER_URL, params)))
     return res
 
 def download_package(package_name, version):
-    url = _get_package_url(package_name, version)
-    urllib.request.urlretrieve(url, '{}/{}/{}-{}.tbz2'.format(DB_DIR, package_name, package_name, version))
+    response_json = _get_package_url(package_name, version)
+    if(response_json["status"] == "SUCCESS"):
+        urllib.request.urlretrieve(response_json["linkS3"], '{}/{}/{}-{}.tbz2'.format(DB_DIR, package_name, package_name, version))
+    elif(response_json["status"] == "WAIT"):
+        raise Exception("WAIT")
+    else:
+        raise Exception(response_json["errorMessage"])
 
 @errorsCatcher
 def download_db():
