@@ -1,5 +1,9 @@
 #! /bin/bash
-
+#
+# Project Pacloud https://github.com/OlivierBP/Pacloud
+# Created by BAL-PETRE Olivier
+# License MIT 
+#
 # This script parse the DB of files got by:
 # git clone https://github.com/gentoo-mirror/gentoo
 

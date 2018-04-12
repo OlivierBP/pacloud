@@ -1,5 +1,9 @@
 #! /bin/sh
-
+#
+# Project Pacloud https://github.com/OlivierBP/Pacloud
+# Created by BAL-PETRE Olivier
+# License MIT 
+#
 # Create the AMI for the Pacloud's workers from a Ubuntu AMI (tested with Ubuntu 16.04 LTS HVM)
 
 # Update

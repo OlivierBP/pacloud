@@ -257,11 +257,13 @@ Resources:
             - ''
             - - '{'
               - '  "package": "$input.params(''package'')", '
+              - '  "version": "$input.params(''version'')", '
               - '  "useflag": "$input.params(''useflag'')"'
               - '}'
       RequestParameters:
         method.request.querystring.package: false
         # method.request.querystring.package: true => requiered researches
+        method.request.querystring.version: false
         method.request.querystring.useflag: false
       ResourceId: !Ref PackageResource
       RestApiId: !Ref PacloudApi
@@ -375,7 +377,7 @@ Outputs:
         - .execute-api.
         - !Ref 'AWS::Region'
         - .amazonaws.com
-        - /LATEST/package?package=app-text/tree-1.7.0
+        - /LATEST/package?package=app-text/tree&version=1.7.0&useflag=static-libs
   ApiSyncClientDbUrl:
     Description: Url to sync the package database
     Value: !Join 
