@@ -13,9 +13,12 @@ def errorsCatcher(f):
             print("An HTTP error occured")
     return new_f
 
+def _download(url):
+    return urllib.request.urlopen(url).read().decode('utf-8')
+
 def _get_package_url(package_name, version):
     params = urllib.parse.urlencode({'package': package_name, 'version': version, 'useflag': urllib.parse.quote(USE)})
-    res = urllib.request.urlopen('{}/LATEST/package?{}'.format(SERVER_URL, params)).read().decode('utf-8')
+    res = _download('{}/LATEST/package?{}'.format(SERVER_URL, params))
     return res
 
 def download_package(package_name, version):
@@ -24,7 +27,7 @@ def download_package(package_name, version):
 
 @errorsCatcher
 def download_db():
-    return urllib.request.urlopen('{}/database/'.format(SERVER_URL)).read().decode('utf-8')
+    return _download('{}/database/'.format(SERVER_URL))
 
 def download_category(url):
-    return urllib.request.urlopen(url).read().decode('utf-8')
+    return _download(url)
