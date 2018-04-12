@@ -23,8 +23,8 @@ const TableName = 'PacloudPackages';        // Name of the DynamoDB table
 exports.lambda_handler = (event, context, callback) => {
 
     // Test if a name was sent
-    if (! event.package){
-        callback('ERROR: Not any package given');
+    if ((! event.package) || (! event.version)){
+        callback('ERROR: Not any package or version given');
     }
     else{
         let params_getQueueUrl = {
@@ -36,12 +36,12 @@ exports.lambda_handler = (event, context, callback) => {
                 console.log('Failed to get the SQS queue:', err, err.stack);
             }
             else {
-                let packageExpression = event.package;
-                let nameLong = packageExpression.match(/(.*)-[0-9]+\./)[1];
-                let category = packageExpression.match(/(.*)\//)[1];
-                let nameShort = packageExpression.match(/.*\/(.*)-[0-9]+\./)[1];
-                let version = packageExpression.match(/.*-([0-9]+\..*)/)[1];
+                let nameLong = event.package;
+                let category = nameLong.match(/(.*)\//)[1];
+                let nameShort = nameLong.match(/.*\/(.*)/)[1];
+                let version = event.version;
                 let useflag = event.useflag || " ";
+                let packageExpression = nameLong + '-' + version;
 
                 let params_getItem = {
                         Key: {

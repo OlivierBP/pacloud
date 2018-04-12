@@ -1,5 +1,9 @@
 #! /bin/sh
-
+#
+# Project Pacloud https://github.com/OlivierBP/Pacloud
+# Created by BAL-PETRE Olivier
+# License MIT 
+#
 # This script get a compilation request from the SQS queue, work on, upload the result in S3 and delete the task from the queue
 
 # Name of the queue
@@ -60,7 +64,9 @@ if [ -n "$message" ]; then
     echo "Package compiled"
 
     # Upload the binary in S3
-    aws s3 cp /usr/portage/packages/$packageExpression.tbz2 s3://$bucketName/ --acl public-read
+    uuid=$(cat /proc/sys/kernel/random/uuid)
+    packageS3Name=$bucketName/$uuid-$category@$nameShort-$version.tbz2
+    aws s3 cp /usr/portage/packages/$packageExpression.tbz2 s3://$packageS3Name --acl public-read
     echo "Binary uploaded"
 
 
@@ -81,7 +87,7 @@ if [ -n "$message" ]; then
         dbupdate_expressionAttributeValues=" \
             { \
                 \":l\": { \
-                    \"S\": \"https://s3-eu-west-1.amazonaws.com/$bucketName/$packageExpression.tbz2\" \
+                    \"S\": \"https://s3-eu-west-1.amazonaws.com/$packageS3Name\" \
                 } \
             }"
         dbupdate_updateExpression="SET linkS3 = :l REMOVE compiling, errorMessage"

@@ -1,5 +1,9 @@
 #! /bin/sh
-
+#
+# Project Pacloud https://github.com/OlivierBP/Pacloud
+# Created by BAL-PETRE Olivier
+# License MIT 
+#
 # Script started regularly by a cron job
 # Check if something is compiling and if there is a compilation request. Start a compilation if needed
 

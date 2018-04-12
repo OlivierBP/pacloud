@@ -1,5 +1,9 @@
 #! /bin/sh
-
+#
+# Project Pacloud https://github.com/OlivierBP/Pacloud
+# Created by BAL-PETRE Olivier
+# License MIT 
+#
 # Set flags in /etc/portage/make.conf
 
 # Get the number of core

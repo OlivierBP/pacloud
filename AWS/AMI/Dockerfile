@@ -1,3 +1,7 @@
+# Project Pacloud https://github.com/OlivierBP/Pacloud
+# Created by BAL-PETRE Olivier
+# License MIT 
+#
 # This Dockerfile create the container for worker for the project Pacloud
 
 FROM gentoo/stage3-amd64

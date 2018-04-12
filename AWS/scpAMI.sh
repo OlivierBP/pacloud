@@ -1,5 +1,9 @@
 #! /bin/sh
-
+#
+# Project Pacloud https://github.com/OlivierBP/Pacloud
+# Created by BAL-PETRE Olivier
+# License MIT 
+#
 # Send the AMI directory to a EC2 machine through the bastion server
 
 

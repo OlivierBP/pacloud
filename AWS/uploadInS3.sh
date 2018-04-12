@@ -1,7 +1,9 @@
 #! /bin/sh
-
-# Need the package "awscli"
-
+#
+# Project Pacloud https://github.com/OlivierBP/Pacloud
+# Created by BAL-PETRE Olivier
+# License MIT 
+#
 # Script to push in a S3 bucket all the stuff needed for the Pacloud Project
 # Need to create a user with programmatic access and S3 policies
 # Configure the credentials on the local computer with "aws configure"

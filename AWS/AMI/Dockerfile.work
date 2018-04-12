@@ -1,3 +1,7 @@
+# Project Pacloud https://github.com/OlivierBP/Pacloud
+# Created by BAL-PETRE Olivier
+# License MIT 
+#
 # This Dockerfile allow to modify the container building it without have to rebuild all the container to can test
 # It's a modified copy of the Dockerfile
 
