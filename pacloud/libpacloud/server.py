@@ -1,8 +1,9 @@
 #!/usr/bin/python
 
 import urllib.request
+import urllib.parse
 
-from libpacloud.config import SERVER_URL, DB_DIR
+from libpacloud.config import SERVER_URL, DB_DIR, USE
 
 def errorsCatcher(f):
     def new_f():
@@ -13,7 +14,9 @@ def errorsCatcher(f):
     return new_f
 
 def _get_package_url(package_name, version):
-    return urllib.request.urlopen('{}/package/{}-{}'.format(SERVER_URL, package_name, version)).read().decode("utf-8")
+    params = urllib.parse.urlencode({'package': package_name, 'version': version, 'useflag': urllib.parse.quote(USE)})
+    res = urllib.request.urlopen('{}/LATEST/package?{}'.format(SERVER_URL, params)).read().decode('utf-8')
+    return res
 
 def download_package(package_name, version):
     url = _get_package_url(package_name, version)
