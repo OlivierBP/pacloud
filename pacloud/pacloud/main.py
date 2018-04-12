@@ -59,13 +59,7 @@ def update():
     libpacloud.update()
     print('Done!')
 
-def install(arg):
-    version = None
-    version_check = re.search('-[0-9]', arg)
-    if(version_check != None):
-        pos = version_check.start()
-        version = arg[pos+1:]
-        arg = arg[:pos:]
+def _check_unique_package(arg):
     packages = libpacloud.search(arg)
     if(len(packages) != 1):
         if(arg not in libpacloud.list_packages()):
@@ -73,8 +67,20 @@ def install(arg):
             print("Found packages:")
             for package in packages:
                 print(package["name"])
-            return -1
+            return False
+    return True
+
+def install(arg):
+    version = None
+    version_check = re.search('-[0-9]', arg)
+    if(version_check != None):
+        pos = version_check.start()
+        version = arg[pos+1:]
+        arg = arg[:pos:]
+    if not _check_unique_package(arg):
+        return
     else:
+        packages = libpacloud.search(arg)
         arg = packages[0]["name"]
     print("Resolving dependencies...\n")
     dependencies_list = libpacloud.list_dependencies(arg, version)
@@ -92,6 +98,10 @@ def install(arg):
         print("Done!")
 
 def remove(arg):
+    if not _check_unique_package(arg):
+        return
+    else:
+        arg = libpacloud.search(arg)[0]["name"]
     print('Resolving dependencies...\n')
     dependencies_list = libpacloud.list_remove_dependencies(arg)
     strdep = "Packages ({}):".format(len(dependencies_list))
