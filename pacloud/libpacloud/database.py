@@ -2,8 +2,9 @@
 
 import os
 import json
+import re
 
-from libpacloud.config import DB_DIR
+from libpacloud.config import DB_DIR, USE
 
 PACKAGE_DIR = lambda pkg_name: '{}{}'.format(DB_DIR, pkg_name)
 METADATA_FILE = lambda pkg_name: '{}/metadata.json'.format(PACKAGE_DIR(pkg_name))
@@ -19,7 +20,25 @@ def info_package(package_name):
 
 def _parse_dependencies(list, dep):
     if '(' not in dep:
-        list.append(dep)
+        deplist = dep.split()
+        for dep in deplist:
+            if dep[0] != '!':
+                m = re.search('\w.*-[0-9]', dep)
+                if(m != None):
+                    list.append(m.group(0)[:-2])
+                else:
+                    m = re.search('\w.*:', dep)
+                    if m != None:
+                        list.append(m.group(0)[:-1])
+                    else:
+                        m = re.search('\w.*$', dep)
+                        list.append(m.group(0))
+    else:
+        deplist = dep.split()
+        if '?' in deplist[0]:
+            if(deplist[0][0] != '!' and deplist[0][:-1] in USE)\
+                or (deplist[0][0] == '!' and deplist[0][1:-1] not in USE):
+                _parse_dependencies(list, " ".join(deplist[deplist.index('(')+1:-1]))
 
 def list_dependencies(package_name, version=None):
     versions = info_package(package_name)["versions"]
@@ -34,7 +53,6 @@ def list_dependencies(package_name, version=None):
                 break
     for dep in dependencies:
         _parse_dependencies(list, dep)
-    print(list)
     return list
 
 def installed_version(package_name):

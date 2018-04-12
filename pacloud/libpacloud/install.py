@@ -39,6 +39,10 @@ def install(package_name, version=None):
         print("Downloading {}-{}...".format(package_name, version), end="")
         download_package(package_name, version)
     tar = tarfile.open(package_path)
+    
+    rem = tar.getnames()
+    db.add_files_list(package_name, rem)
+    
     tar.extractall('/tmp/{}'.format(package_name))
 
     """

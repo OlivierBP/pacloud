@@ -18,4 +18,12 @@ def list_dependencies(package_name, version=None):
     return list
 
 def remove(package_name):
-    pass
+    rmlist = db.list_files(package_name)
+    rmlist.reverse()
+    
+    for paths in rmlist:
+        if os.path.isfile(paths):
+            rm = os.remove
+        elif os.path.isdir(paths):
+            remove(paths)
+            rm = os.rmdir
