@@ -21,15 +21,18 @@ def info_package(package_name):
 def _parse_dependencies(list, dep):
     if '(' not in dep:
         deplist = dep.split()
-        print(deplist)
         for dep in deplist:
             if dep[0] != '!':
-                m = re.search('\w.*(:.|-[0-9])', dep)
+                m = re.search('\w.*-[0-9]', dep)
                 if(m != None):
                     list.append(m.group(0)[:-2])
                 else:
-                    m = re.search('\w.*$', dep)
-                    list.append(m.group(0))
+                    m = re.search('\w.*:', dep)
+                    if m != None:
+                        list.append(m.group(0)[:-1])
+                    else:
+                        m = re.search('\w.*$', dep)
+                        list.append(m.group(0))
     else:
         deplist = dep.split()
         if '?' in deplist[0]:
