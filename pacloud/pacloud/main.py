@@ -111,7 +111,7 @@ def remove(arg):
     if(_yesno("Do you want to remove these packages? [Y/n] ")):
         for package in dependencies_list:
             print(package + "... ", end="")
-            libpacloud.remove(arg)
+            libpacloud.remove(package)
             print("done!")
         print("Done!")
 
