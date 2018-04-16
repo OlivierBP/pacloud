@@ -85,8 +85,8 @@ def install(arg):
     print("Resolving dependencies...\n")
     dependencies_list = libpacloud.list_dependencies(arg, version)
     strdep = "Packages ({}):".format(len(dependencies_list))
-    for dependency in dependencies_list:
-        strdep += " {} ".format(dependency)
+    for dependency, version in dependencies_list:
+        strdep += " {}-{} ".format(dependency, version)
     print(strdep +"\n")
     if(_yesno("Do you want to proceed with installation? [Y/n] ")):
         print("Installing packages...")
@@ -105,8 +105,8 @@ def remove(arg):
     print('Resolving dependencies...\n')
     dependencies_list = libpacloud.list_remove_dependencies(arg)
     strdep = "Packages ({}):".format(len(dependencies_list))
-    for dependency in dependencies_list:
-        strdep += " {} ".format(dependency)
+    for dependency, version in dependencies_list:
+        strdep += " {}-{} ".format(dependency, version)
     print(strdep +"\n")
     if(_yesno("Do you want to remove these packages? [Y/n] ")):
         for package in dependencies_list:

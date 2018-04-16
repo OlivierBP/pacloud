@@ -8,28 +8,28 @@ import tarfile
 import distutils.dir_util
 import shutil
 
-
+# todo: add version and the fact that we want to see a package re-installed if already up-to-date.
 def list_dependencies(package_name, version=None):
     list = []
+    tested = [] # Stop infinite recursion with co-dependent packages
 
     #check dependencies
     def check_dep(package_name, version=None):
+        if package_name in tested:
+            return
+        tested.append(package_name)
         installed_version = db.installed_version(package_name)
         dep_package = db.list_dependencies(package_name, version)
-        if version == None and package_name not in list:
-            list.append(package_name)
+        if version == None and installed_version == None and package_name not in list:
+            list.append((package_name,version))
         elif (version != None) and (version != installed_version):
-            list.append(package_name)
-        for dep in dep_package:
+            list.append((package_name, version))
+        for dep, version in dep_package:
             if dep not in list:
-                check_dep(dep)
-            if package_name not in list:
-                list.append(package_name)
+                check_dep(dep, version)
 
-    check_dep(package_name)
+    check_dep(package_name, version)
     return list
-
-
 
 def install(package_name, version=None):
     if(version == None):

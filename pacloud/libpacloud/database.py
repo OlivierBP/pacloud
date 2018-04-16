@@ -25,14 +25,14 @@ def _parse_dependencies(list, dep):
             if dep[0] != '!':
                 m = re.search('\w.*-[0-9]', dep)
                 if(m != None):
-                    list.append(m.group(0)[:-2])
+                    name = m.group(0)[:-2]
+                    m = re.search('-[0-9][^:]*', dep)
+                    version = m.group(0)[1:]
                 else:
-                    m = re.search('\w.*:', dep)
-                    if m != None:
-                        list.append(m.group(0)[:-1])
-                    else:
-                        m = re.search('\w.*$', dep)
-                        list.append(m.group(0))
+                    m = re.search('\w[^:]*', dep)
+                    name = m.group(0)
+                    version = info_package(name)["versions"][-1]["number"] # Take the last version when no version specified
+                list.append((name, version))
     else:
         deplist = dep.split()
         if '?' in deplist[0]:
@@ -92,8 +92,7 @@ def mark_as_installed(package_name, version):
     for available_version in metadata['versions']:
         if(available_version['number'] == version):
             for dependency in list_dependencies(package_name, version):
-                dependency_name = dependency#[:max(-1,min(dependency.find('>'), dependency.find('=')))]
-                _mark_as_required_by(dependency_name, package_name)
+                _mark_as_required_by(dependency, package_name)
     _rewrite_metadata(package_name, metadata)
 
 
@@ -117,7 +116,10 @@ def _mark_as_required_by(package_name, required_by):
 
 def _remove_required_by(package_name, required_by):
     metadata = info_package(package_name)
-    metadata['required_by'].remove(required_by)
+    try:
+        metadata['required_by'].remove(required_by)
+    except ValueError:
+        pass
     _rewrite_metadata(package_name, metadata)
 
 def add_files_list(package_name, files_list):
