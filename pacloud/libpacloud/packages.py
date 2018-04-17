@@ -12,8 +12,8 @@ def list_dependencies(package_name, version=None):
     def check_dep(package_name, version=None):
         if package_name not in list:
             list.append(package_name)
-            for dep in db.list_dependencies(package_name, version):
-                check_dep(dep)
+            for dep, version in db.list_dependencies(package_name, version):
+                check_dep(dep, version)
     check_dep(package_name, version)
     return list
 
@@ -23,7 +23,10 @@ def remove(package_name):
 
     for paths in rmlist:
         if os.path.isfile(paths):
-            os.remove(paths)
+            try:
+                os.remove(paths)
+            except PermissionError:
+                raise
         elif os.path.isdir(paths):
             try:
                 os.rmdir(paths)

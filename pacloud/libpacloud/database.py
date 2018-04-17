@@ -24,16 +24,16 @@ def _parse_dependencies(list, dep):
         for dep in deplist:
             if dep[0] != '!':
                 m = re.search('\w.*-[0-9]', dep)
-                if(m != None):
+                if(m != None): # Version number has been found
                     name = m.group(0)[:-2]
                     m = re.search('-[0-9][^:]*', dep)
                     version = m.group(0)[1:]
-                else:
+                else: # No version number: we take the last one
                     m = re.search('\w[^:]*', dep)
                     name = m.group(0)
                     version = info_package(name)["versions"][-1]["number"] # Take the last version when no version specified
                 list.append((name, version))
-    else:
+    else: # USE or || case
         deplist = dep.split()
         if '?' in deplist[0]:
             if(deplist[0][0] != '!' and deplist[0][:-1] in USE)\
@@ -91,14 +91,14 @@ def mark_as_installed(package_name, version):
     metadata['installed'] = version
     for available_version in metadata['versions']:
         if(available_version['number'] == version):
-            for dependency in list_dependencies(package_name, version):
+            for dependency, version in list_dependencies(package_name, version):
                 _mark_as_required_by(dependency, package_name)
     _rewrite_metadata(package_name, metadata)
 
 
 def mark_as_uninstalled(package_name):
     metadata = info_package(package_name)
-    for dependency in list_dependencies(package_name, installed_version(package_name)):
+    for dependency, version in list_dependencies(package_name, installed_version(package_name)):
         dependency_name = dependency#[:max(-1,min(dependency.find('>'), dependency.find('=')))]
         _remove_required_by(dependency_name, package_name)
     metadata.pop('installed', None)
