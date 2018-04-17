@@ -3,6 +3,7 @@
 import argparse
 import libpacloud
 import re
+import os
 
 def main():
     parser = argparse.ArgumentParser()
@@ -59,14 +60,17 @@ def update():
     libpacloud.update()
     print('Done!')
 
+def _ambiguous_search(list):
+    print("Error: ambiguous package search")
+    print("Found packages:")
+    for package in list:
+        print(package["name"])
+
 def _check_unique_package(arg):
     packages = libpacloud.search(arg)
     if(len(packages) != 1):
         if(arg not in libpacloud.list_packages()):
-            print("Error: ambiguous package search")
-            print("Found packages:")
-            for package in packages:
-                print(package["name"])
+            _ambiguous_search(packages)
             return False
     return True
 
@@ -84,6 +88,9 @@ def install(arg):
         arg = packages[0]["name"]
     print("Resolving dependencies...\n")
     dependencies_list = libpacloud.list_dependencies(arg, version)
+    if(len(dependencies_list) == 0):
+        print("No package found. Aborting.")
+        return False
     strdep = "Packages ({}):".format(len(dependencies_list))
     for dependency, version in dependencies_list:
         strdep += " {}-{} ".format(dependency, version)
@@ -107,6 +114,9 @@ def remove(arg):
         arg = libpacloud.search(arg)[0]["name"]
     print('Resolving dependencies...\n')
     dependencies_list = libpacloud.list_remove_dependencies(arg)
+    if(len(dependencies_list) == 0):
+        print("No package found. Aborting.")
+        return False
     strdep = "Packages ({}):".format(len(dependencies_list))
     for dependency in dependencies_list:
         strdep += " {} ".format(dependency)
@@ -125,7 +135,7 @@ def remove(arg):
 def query(arg):
     results = libpacloud.search(arg)
     if(len(results) != 1):
-        print('Ambiguous search. Aborting.')
+        _ambiguous_search(results)
         return
     print('Name        : {}'.format(results[0]['name']))
     print('Description : {}'.format(results[0]['description']))
@@ -150,6 +160,9 @@ def query(arg):
         pass
 
 def _yesno(message):
+    if(os.geteuid() != 0):
+        print("Insufficient privileges. Try running the command with sudo.")
+        return False
     user_choice = input(message)
     return user_choice in ['', 'Y', 'y']
 
