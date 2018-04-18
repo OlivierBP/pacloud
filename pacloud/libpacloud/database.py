@@ -18,11 +18,43 @@ def list_packages():
 def info_package(package_name):
     return json.load(open(METADATA_FILE(package_name), 'r'))
 
+def _find_package_version(specifier, name, version):
+    versions = info_package(name)["versions"]
+    installed = installed_version(name)
+    if(version == None):
+        return versions[-1]["number"]
+    if(specifier == None or specifier == '='):
+        if(installed != None):
+            return installed
+        else:
+            return version
+
+    # Checking that the specifier exists so that we don't have any issues with the eval function
+    if(specifier not in ['>=', '>', '~', '<=', '<']):
+        print("Unknown specifier: {}".format(specifier))
+        return version
+
+    # Changing the ~ specifier to something python can read
+    if(specifier == '~'):
+        specifier = 'in'
+
+    if(eval('installed != None and installed {} version'.format(specifier))):
+        return installed
+    else:
+        for v in versions:
+            if(eval('version {} v["number"]'.format(specifier))):
+                return v["number"]
+    return version
+
 def _parse_dependencies(list, dep):
     if '(' not in dep:
         deplist = dep.split()
         for dep in deplist:
             if dep[0] != '!':
+                specifier = None
+                m = re.search('[^\w]*', dep)
+                if(m != None and m.group(0) != ""):
+                    specifier = m.group(0)
                 m = re.search('\w.*-[0-9]', dep)
                 if(m != None): # Version number has been found
                     name = m.group(0)[:-2]
@@ -31,7 +63,8 @@ def _parse_dependencies(list, dep):
                 else: # No version number: we take the last one
                     m = re.search('\w[^:]*', dep)
                     name = m.group(0)
-                    version = info_package(name)["versions"][-1]["number"] # Take the last version when no version specified
+                    version = None
+                version = _find_package_version(specifier, name, version)
                 list.append((name, version))
     else: # USE or || case
         deplist = dep.split()
