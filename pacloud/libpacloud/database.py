@@ -34,15 +34,21 @@ def _find_package_version(specifier, name, version):
         print("Unknown specifier: {}".format(specifier))
         return version
 
-    # Changing the ~ specifier to something python can read
+    # The ~ specifier is different than the others
     if(specifier == '~'):
-        specifier = 'in'
+        if(installed != None and version in installed):
+            return installed
+        else:
+            for v in versions:
+                if(version in v["number"]):
+                    return v["number"]
+            return version # default case
 
     if(eval('installed != None and installed {} version'.format(specifier))):
         return installed
     else:
         for v in versions:
-            if(eval('version {} v["number"]'.format(specifier))):
+            if(eval('v["number"] {} version'.format(specifier))):
                 return v["number"]
     return version
 
