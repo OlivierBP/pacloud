@@ -20,15 +20,17 @@ def list_dependencies(package_name, version=None):
 def remove(package_name):
     rmlist = db.list_files(package_name)
     rmlist.reverse()
+    remaining_files = len(rmlist)
+    yield remaining_files
+    index = 0
 
     for paths in rmlist:
+        index = index+1
         if os.path.isfile(paths):
-            try:
-                os.remove(paths)
-            except PermissionError:
-                raise
+            os.remove(paths)
         elif os.path.isdir(paths):
             try:
                 os.rmdir(paths)
-            except OSError:
+            except OSError: # Directory not empty
                 pass
+        yield index

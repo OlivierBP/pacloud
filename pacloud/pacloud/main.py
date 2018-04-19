@@ -75,6 +75,7 @@ def _check_unique_package(arg):
     return True
 
 def install(arg):
+    ts = os.get_terminal_size()
     version = None
     version_check = re.search('-[0-9]', arg)
     if(version_check != None):
@@ -98,16 +99,17 @@ def install(arg):
     if(_yesno("Do you want to proceed with installation? [Y/n] ")):
         print("Installing packages...")
         for package, version in dependencies_list:
-            print(package + "... ", end="")
+            print(package + "... ")
             try:
                 libpacloud.install(package, version)
             except PermissionError:
                 print("Permission denied")
                 return
-            print("done!")
+            print("\033[1F\033[{}C done!".format(ts.columns - 6))
         print("Done!")
 
 def remove(arg):
+    ts = os.get_terminal_size()
     if not _check_unique_package(arg):
         return
     else:
@@ -124,12 +126,14 @@ def remove(arg):
     if(_yesno("Do you want to remove these packages? [Y/n] ")):
         for package in dependencies_list:
             try:
-                print(package + "... ", end="")
-                libpacloud.remove(package)
+                print(package + "... ")
+                total_files = next(libpacloud.remove(package))
+                for i in libpacloud.remove(package):
+                    print("\033[1F\033[{}C{}%".format(ts.columns - 10 ,int(i/total_files*100)))
             except PermissionError:
                 print("Error: permission denied")
                 return
-            print("done!")
+            print("\033[1F\033[{}C done!".format(ts.columns - 6))
         print("Done!")
 
 def query(arg):

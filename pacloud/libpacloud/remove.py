@@ -14,5 +14,6 @@ def list_remove_dependencies(package_name):
     return dependencies
 
 def remove(package_name):
-    pkg.remove(package_name)
+    for file_removed in pkg.remove(package_name):
+        yield file_removed
     db.mark_as_uninstalled(package_name)
