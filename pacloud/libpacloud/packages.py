@@ -38,12 +38,6 @@ def remove(package_name):
                 pass
         yield index
 
-def _progress_tar(members):
-    index = 0
-    for m in members:
-        index = index + 1
-        yield index
-
 def install(package_name, version=None):
     if(version == None):
         version = db.info_package(package_name)["versions"][-1]["number"]
@@ -64,7 +58,6 @@ def install(package_name, version=None):
         index = index + 1
         tar.extract(member, '/tmp/{}-{}'.format(package_name, version))
         yield index
-    #tar.extractall('/tmp/{}-{}'.format(package_name, version), members=_progress_tar(tar))
     tar.close()
     distutils.dir_util.copy_tree('/tmp/{}-{}'.format(package_name, version),'/')
 

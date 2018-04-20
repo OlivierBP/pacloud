@@ -107,7 +107,6 @@ def install(arg):
             except PermissionError:
                 print("Permission denied")
                 return
-            #print("\033[1F\033[{}C done!".format(ts.columns - 6))
         print("Done!")
 
 def _print_progress_bar(percentage):
@@ -138,11 +137,9 @@ def remove(arg):
                 total_files = next(libpacloud.remove(package))
                 for i in libpacloud.remove(package):
                     _print_progress_bar(int(i/total_files*100))
-                    #print("\033[1F\033[{}C{}%".format(ts.columns - 10 ,int(i/total_files*100)))
             except PermissionError:
                 print("Error: permission denied")
                 return
-            #print("\033[1F\033[{}C done!".format(ts.columns - 6))
         print("Done!")
 
 def query(arg):
