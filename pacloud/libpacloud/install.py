@@ -17,9 +17,9 @@ def list_dependencies(package_name, version=None):
         tested.append(package_name)
         installed_version = db.installed_version(package_name)
         dep_package = db.list_dependencies(package_name, version)
-        if version == None and installed_version == None and package_name not in list:
+        if version == None and installed_version == None and (package_name, None) not in list:
             list.append((package_name, db._find_package_version(None, package_name, version)))
-        elif (version != None) and (version != installed_version):
+        elif (version != None) and (version != installed_version) and (package_name, version) not in list:
             list.append((package_name, version))
         for dep, version in dep_package:
             if dep not in list:
