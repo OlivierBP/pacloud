@@ -99,14 +99,22 @@ def install(arg):
     if(_yesno("Do you want to proceed with installation? [Y/n] ")):
         print("Installing packages...")
         for package, version in dependencies_list:
-            print(package + "... ")
             try:
-                libpacloud.install(package, version)
+                print(package + "... ")
+                total_files = next(libpacloud.install(package, version))
+                for i in libpacloud.install(package, version):
+                    _print_progress_bar(int(i/total_files*100))
             except PermissionError:
                 print("Permission denied")
                 return
-            print("\033[1F\033[{}C done!".format(ts.columns - 6))
+            #print("\033[1F\033[{}C done!".format(ts.columns - 6))
         print("Done!")
+
+def _print_progress_bar(percentage):
+    ts = os.get_terminal_size()
+    bar = "\033[1F\033[{}C".format(ts.columns - 52) # Putting cursor at the right position
+    bar = "{}[{}{}]".format(bar, '='*(int(percentage/2)), '-'*(int(50-percentage/2)))
+    print(bar)
 
 def remove(arg):
     ts = os.get_terminal_size()
@@ -129,11 +137,12 @@ def remove(arg):
                 print(package + "... ")
                 total_files = next(libpacloud.remove(package))
                 for i in libpacloud.remove(package):
-                    print("\033[1F\033[{}C{}%".format(ts.columns - 10 ,int(i/total_files*100)))
+                    _print_progress_bar(int(i/total_files*100))
+                    #print("\033[1F\033[{}C{}%".format(ts.columns - 10 ,int(i/total_files*100)))
             except PermissionError:
                 print("Error: permission denied")
                 return
-            print("\033[1F\033[{}C done!".format(ts.columns - 6))
+            #print("\033[1F\033[{}C done!".format(ts.columns - 6))
         print("Done!")
 
 def query(arg):
