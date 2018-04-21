@@ -5,7 +5,7 @@ import urllib.parse
 import json
 import time
 
-from libpacloud.config import SERVER_URL, DB_DIR, USE
+from libpacloud.config import SERVER_URL, DB_URL, DB_DIR, USE
 
 def errorsCatcher(f):
     def new_f():
@@ -29,7 +29,7 @@ def download_package(package_name, version):
         print(response_json["linkS3"])
         urllib.request.urlretrieve(response_json["linkS3"], '{}/{}/{}-{}.tbz2'.format(DB_DIR, package_name, package_name[package_name.find('/')+1:], version))
     elif(response_json["status"] == "WAIT"):
-        print('.', end="")
+        print('Compiling...')
         time.sleep(10)
         download_package(package_name, version)
         #raise Exception("WAIT")
@@ -38,7 +38,7 @@ def download_package(package_name, version):
 
 @errorsCatcher
 def download_db():
-    return _download('{}/database/'.format(SERVER_URL))
+    return _download('{}manifest.txt'.format(DB_URL))
 
-def download_category(url):
-    return _download(url)
+def download_category(category):
+    return _download('{}{}.json'.format(DB_URL, category))
