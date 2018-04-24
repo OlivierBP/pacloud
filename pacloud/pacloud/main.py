@@ -11,11 +11,11 @@ def main():
     package_group.add_argument('-s', '--search', help='search for specified package', metavar='package')
     package_group.add_argument('-i', '--install', help='install specified package', metavar='package')
     package_group.add_argument('-r', '--remove', help='remove specified package', metavar='package')
-    package_group.add_argument('-c', '--compile', help='compile specified package', metavar='package')
+    # package_group.add_argument('-c', '--compile', help='compile specified package', metavar='package')
     package_group.add_argument('-q', '--query', help='return detailed informations regarding specified package', metavar='package')
     parser.add_argument('-u', '--update', help='update local database', action='store_true')
     parser.add_argument('-U', '--upgrade', help='upgrade system', action='store_true')
-    parser.add_argument('--update-config', help='send user configuration to the server', action='store_true')
+    # parser.add_argument('--update-config', help='send user configuration to the server', action='store_true')
 
     args = parser.parse_args()
     args_dict = dict((k,v) for k,v in args.__dict__.items() if v is not None and v is not False)
@@ -30,6 +30,8 @@ def main():
             remove(arg)
         elif name == "query":
             query(arg)
+        elif name == "upgrade":
+            upgrade()
         else:
             func = getattr(libpacloud, name)
             if (arg):
@@ -75,7 +77,6 @@ def _check_unique_package(arg):
     return True
 
 def install(arg):
-    ts = os.get_terminal_size()
     version = None
     version_check = re.search('-[0-9]', arg)
     if(version_check != None):
@@ -116,7 +117,6 @@ def _print_progress_bar(percentage):
     print(bar)
 
 def remove(arg):
-    ts = os.get_terminal_size()
     if not _check_unique_package(arg):
         return
     else:
@@ -139,6 +139,29 @@ def remove(arg):
                     _print_progress_bar(int(i/total_files*100))
             except PermissionError:
                 print("Error: permission denied")
+                return
+        print("Done!")
+
+def upgrade():
+    print('Resolving dependencies...\n')
+    dependencies_list = libpacloud.upgrade()
+    if(len(dependencies_list) == 0):
+        print("No package found. Aborting.")
+        return False
+    strdep = "Packages ({}):".format(len(dependencies_list))
+    for dependency, version in dependencies_list:
+        strdep += " {}-{} ".format(dependency, version)
+    print(strdep +"\n")
+    if(_yesno("Do you want to update these packages? [Y/n] ")):
+        print("Installing packages...")
+        for package, version in dependencies_list:
+            try:
+                print(package + "... ")
+                total_files = next(libpacloud.install(package, version))
+                for i in libpacloud.install(package, version):
+                    _print_progress_bar(int(i/total_files*100))
+            except PermissionError:
+                print("Permission denied")
                 return
         print("Done!")
 
