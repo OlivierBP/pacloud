@@ -1,8 +1,14 @@
 # pacloud
 
 This is the folder where everything client-related should be.  
-[database.md](./database.md) lists the architectures of existing databases for dpkg, pacman, rpm... (soon to be deleted)
 
 [pacloud](./pacloud) contains the files relative to the command-line interface  
+[web](./web) contains the files relative to the web interface  
 [libpacloud](./libpacloud) contains the files relative to the micro-services and the API that makes the package manager what it is  
-[db](./db) contains a template of the local database. It is to be copied in `/var/lib/pacloud` for testing purposes
+[etc](./etc) contains a template of the user configuration. It is to be copied in /etc/pacloud/  
+
+This project uses python setuptools to be built. To build it, use:
+```
+# pip install -e .
+```
+on this folder.

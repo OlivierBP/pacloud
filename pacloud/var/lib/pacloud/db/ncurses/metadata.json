@@ -1,1 +1,0 @@
-{"name": "ncurses", "description": "System V Release 4.0 curses emulation library", "versions": [{"number": "6.1-r1", "dependencies": ["imlib2"]}], "installed": "6.1-r1"}
