@@ -26,7 +26,6 @@ exports.lambda_handler = function(event, context) {
     else if (event.RequestType == 'Update') {
       // Delete first
       deleteSpotFleet(event, function(err, result) {
-        var status = err ? 'FAILED' : 'SUCCESS';
         if (err)
           return sendResponse(event, context, "FAILED", result, err);
       });
