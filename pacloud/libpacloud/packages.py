@@ -43,8 +43,9 @@ def install(package_name, version=None):
         version = db.info_package(package_name)["versions"][-1]["number"]
     package_path = "{}/{}/{}-{}.tbz2".format(DB_DIR, package_name, package_name[package_name.find('/')+1:], version)
     if(not os.path.isfile(package_path)):
-        print("Downloading {}-{}...".format(package_name, version), end="")
+        print("Downloading {}-{}...".format(package_name, version), end="", flush=True)
         download_package(package_name, version)
+        print("done!")
     tar = tarfile.open(package_path)
 
     # Create list of files that are installed
