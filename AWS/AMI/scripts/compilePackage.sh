@@ -46,6 +46,7 @@ if [ -n "$message" ]; then
     useflag=$(echo $body | jq -r '.useflag')                        # 
 
     # Before compile, set the make.conf
+    # TODO: Needed ??
     /pacloud/AMI/scripts/setMakeConf.sh
     
     errorMessage=""

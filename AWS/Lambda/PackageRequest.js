@@ -60,7 +60,7 @@ exports.lambda_handler = (event, context, callback) => {
                         console.log('Failed to get an item from dynamodb:', err, err.stack);
                     }
                     else{
-                        // WAIT: No item, or not with the good useflags, request a compilation
+                        // WAIT: No item, request a compilation
                         if (! data_getItem.hasOwnProperty('Item')){
                             let messageBody = JSON.stringify(
                                 {
