@@ -2,21 +2,21 @@
 # Create a custom resource with CloudFormation: SpotFleet
 # https://github.com/OlivierBP/Pacloud
 # Created 2018-03-29 by BAL-PETRE Olivier
-# License MIT 
+# License MIT
 
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
   Create a custom resource. Create a SpotFleet
 
 
-Resources:   
+Resources:
 
   SpotFleet:
     Type: 'Custom::SpotFleet'
     Version: "1.0"
     Properties:
       ServiceToken: arn:aws:lambda:eu-west-1:912175495967:function:LambdaCustomResourceSpotFleet
-      
+
       AllocationStrategy: !ImportValue AllocationStrategy
       ExcessCapacityTerminationPolicy: default
       IamFleetRole: !ImportValue IamFleetRole
@@ -24,21 +24,21 @@ Resources:
       TargetCapacity: !ImportValue TargetCapacity
       TerminateInstancesWithExpiration: true
       Type: maintain
-      
+
       LaunchSpecifications:
       - EbsOptimized: false
         InstanceInterruptionBehavior: hibernate
-        IamInstanceProfile: 
+        IamInstanceProfile:
           Arn: !ImportValue IamInstanceProfile
         ImageId: !ImportValue ImageId
         InstanceType: !ImportValue InstanceType
         KeyName: !ImportValue KeyName
-        Monitoring: 
+        Monitoring:
           Enabled: true
         SecurityGroups:
         - GroupId: !ImportValue SecurityGroups
         SubnetId: !ImportValue SubnetId
-        TagSpecifications: 
+        TagSpecifications:
         - ResourceType: instance
           Tags:
           - Key: Project
@@ -56,6 +56,4 @@ Outputs:
   TargetCapacity:
     Value: !ImportValue TargetCapacity
     Description: Target capacity of the spotfleet
-
-
 

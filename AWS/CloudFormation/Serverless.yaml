@@ -2,7 +2,7 @@
 # Serverless
 # https://github.com/OlivierBP/Pacloud
 # Created 2018-03-18 by BAL-PETRE Olivier
-# License MIT 
+# License MIT
 
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
@@ -26,11 +26,6 @@ Parameters:
     Default: Lambda/PackageRequest.zip
     Type: String
 
-  S3KeyLambdaSyncClientDb:
-    Description: Path in the S3 bucket where the lambda code for SyncClientDb is stored
-    Default: Lambda/SyncClientDb.zip
-    Type: String
-
 # Mappings:
 
 
@@ -45,7 +40,7 @@ Resources:
       Description: Check if a package is already compiled. If yes, return the URL, if no, request to compile it
       FunctionName: LambdaPackageRequest
       Handler: PackageRequest.lambda_handler
-      Role: !GetAtt 
+      Role: !GetAtt
         - LambdaPackageRequestRole
         - Arn
       Runtime: nodejs4.3
@@ -69,75 +64,32 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - 'sts:AssumeRole'
-      Policies: 
-        - 
+      Policies:
+        -
           PolicyName: PutInQueueToCompile
-          PolicyDocument: 
+          PolicyDocument:
             Version: 2012-10-17
-            Statement: 
-              - 
+            Statement:
+              -
                 Effect: Allow
-                Action: 
+                Action:
                   - sqs:SendMessage
                   - sqs:GetQueueUrl
                 Resource: !GetAtt QueueToCompile.Arn
-        - 
+        -
           PolicyName: DynamoDbGetPutLambda
           PolicyDocument:
             Statement:
               - Effect: Allow
                 Action:
-                  # - 'dynamodb:BatchGetItem'
-                  # - 'dynamodb:BatchWriteItem'
                   - 'dynamodb:PutItem'
-                  # - 'dynamodb:DescribeTable'
-                  # - 'dynamodb:DeleteItem'
                   - 'dynamodb:GetItem'
-                  # - 'dynamodb:Scan'
-                  # - 'dynamodb:Query'
-                  # - 'dynamodb:UpdateItem'
-                  # - 'dynamodb:UpdateTable'
                 Resource:
                   - 'arn:aws:dynamodb:*:*:table/*/index/*'
                   - !ImportValue DynamoDbPackagesArn
 
 
 
-
-  ################## LAMBDA SYNC CLIENT DB ##################
-  LambdaSyncClientDb:
-    Type: 'AWS::Lambda::Function'
-    Properties:
-      Code:
-        S3Bucket: !Ref S3BucketLambda
-        S3Key: !Ref S3KeyLambdaSyncClientDb
-      Description: Return the list of all the packages and versions
-      FunctionName: LambdaSyncClientDb
-      Handler: SyncClientDb.lambda_handler
-      Role: !GetAtt 
-        - LambdaSyncClientDbRole
-        - Arn
-      Runtime: nodejs4.3
-      Timeout: 10
-      MemorySize: 128
-      Tags:
-        - Key: Project
-          Value: Pacloud
-        - Key: Name
-          Value: LambdaSyncClientDb
-
-  LambdaSyncClientDbRole:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - 'sts:AssumeRole'
 
 
   ################## API GATEWAY ##################
@@ -146,7 +98,7 @@ Resources:
     Properties:
       Name: Pacloud API
       FailOnWarnings: true
-      
+
   ApiGatewayCloudWatchLogsRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -178,7 +130,7 @@ Resources:
   ApiGatewayAccount:
     Type: 'AWS::ApiGateway::Account'
     Properties:
-      CloudWatchRoleArn: !GetAtt 
+      CloudWatchRoleArn: !GetAtt
         - ApiGatewayCloudWatchLogsRole
         - Arn
 
@@ -200,7 +152,6 @@ Resources:
     Type: 'AWS::ApiGateway::Deployment'
     DependsOn:
       - PackageRequest
-      - SyncRequest
     Properties:
       RestApiId: !Ref PacloudApi
       StageName: DummyStage
@@ -209,11 +160,11 @@ Resources:
     Type: 'AWS::Lambda::Permission'
     Properties:
       Action: 'lambda:invokeFunction'
-      FunctionName: !GetAtt 
+      FunctionName: !GetAtt
         - LambdaPackageRequest
         - Arn
       Principal: apigateway.amazonaws.com
-      SourceArn: !Join 
+      SourceArn: !Join
         - ''
         - - 'arn:aws:execute-api:'
           - !Ref 'AWS::Region'
@@ -227,7 +178,7 @@ Resources:
     Type: 'AWS::ApiGateway::Resource'
     Properties:
       RestApiId: !Ref PacloudApi
-      ParentId: !GetAtt 
+      ParentId: !GetAtt
         - PacloudApi
         - RootResourceId
       PathPart: package
@@ -241,19 +192,19 @@ Resources:
       Integration:
         Type: AWS
         IntegrationHttpMethod: POST
-        Uri: !Join 
+        Uri: !Join
           - ''
           - - 'arn:aws:apigateway:'
             - !Ref 'AWS::Region'
             - ':lambda:path/2015-03-31/functions/'
-            - !GetAtt 
+            - !GetAtt
               - LambdaPackageRequest
               - Arn
             - /invocations
         IntegrationResponses:
           - StatusCode: 200
         RequestTemplates:
-          application/json: !Join 
+          application/json: !Join
             - ''
             - - '{'
               - '  "package": "$input.params(''package'')", '
@@ -270,86 +221,27 @@ Resources:
       MethodResponses:
         - StatusCode: 200
 
-  SyncResource:
-    Type: 'AWS::ApiGateway::Resource'
-    Properties:
-      RestApiId: !Ref PacloudApi
-      ParentId: !GetAtt 
-        - PacloudApi
-        - RootResourceId
-      PathPart: sync
-
-  LambdaSyncClientDbPermission:
-    Type: 'AWS::Lambda::Permission'
-    Properties:
-      Action: 'lambda:invokeFunction'
-      FunctionName: !GetAtt 
-        - LambdaSyncClientDb
-        - Arn
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Join 
-        - ''
-        - - 'arn:aws:execute-api:'
-          - !Ref 'AWS::Region'
-          - ':'
-          - !Ref 'AWS::AccountId'
-          - ':'
-          - !Ref PacloudApi
-          - /*
-
-  SyncRequest:
-    DependsOn: LambdaSyncClientDbPermission
-    Type: 'AWS::ApiGateway::Method'
-    Properties:
-      AuthorizationType: NONE
-      HttpMethod: GET
-      Integration:
-        Type: AWS
-        IntegrationHttpMethod: POST
-        Uri: !Join 
-          - ''
-          - - 'arn:aws:apigateway:'
-            - !Ref 'AWS::Region'
-            - ':lambda:path/2015-03-31/functions/'
-            - !GetAtt 
-              - LambdaSyncClientDb
-              - Arn
-            - /invocations
-        IntegrationResponses:
-          - StatusCode: 200
-        RequestTemplates:
-          application/json: !Join 
-            - ''
-            - - '{'
-              - '  "timestamp": "$input.params(''timestamp'')"'
-              - '}'
-      RequestParameters:
-        method.request.querystring.timestamp: false
-      ResourceId: !Ref SyncResource
-      RestApiId: !Ref PacloudApi
-      MethodResponses:
-        - StatusCode: 200
 
 
   ################## SQS ##################
-  QueueToCompile: 
+  QueueToCompile:
     Type: "AWS::SQS::Queue"
-    Properties: 
+    Properties:
       QueueName: !Ref QueueToCompileName
       MaximumMessageSize: 1024
       MessageRetentionPeriod: 345600
       VisibilityTimeout: 7200
-      RedrivePolicy: 
-        deadLetterTargetArn: 
-          Fn::GetAtt: 
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
             - "DeadLetterQueueToCompile"
             - "Arn"
         maxReceiveCount: 2
 
-  # If a package tried to be compiled more than 2 times, the request is put in this queue
-  DeadLetterQueueToCompile: 
+  # If a package failed to be compiled more than 2 times, the request is put in this queue
+  DeadLetterQueueToCompile:
     Type: "AWS::SQS::Queue"
-    Properties: 
+    Properties:
       MaximumMessageSize: 262144
       MessageRetentionPeriod: 1209600
 
@@ -361,7 +253,7 @@ Resources:
 Outputs:
   ApiRootUrl:
     Description: Root URL of the API gateway
-    Value: !Join 
+    Value: !Join
       - ''
       - - 'https://'
         - !Ref PacloudApi
@@ -370,7 +262,7 @@ Outputs:
         - .amazonaws.com
   ApiRequestPackageUrl:
     Description: Url to request a package
-    Value: !Join 
+    Value: !Join
       - ''
       - - 'https://'
         - !Ref PacloudApi
@@ -378,16 +270,6 @@ Outputs:
         - !Ref 'AWS::Region'
         - .amazonaws.com
         - /LATEST/package?package=app-text/tree&version=1.7.0&useflag=static-libs
-  ApiSyncClientDbUrl:
-    Description: Url to sync the package database
-    Value: !Join 
-      - ''
-      - - 'https://'
-        - !Ref PacloudApi
-        - .execute-api.
-        - !Ref 'AWS::Region'
-        - .amazonaws.com
-        - /LATEST/sync
 
   QueueToCompileName:
     Value: !Ref QueueToCompileName

@@ -2,7 +2,7 @@
 # DynamoDB
 # https://github.com/OlivierBP/Pacloud
 # Created 2018-04-09 by BAL-PETRE Olivier
-# License MIT 
+# License MIT
 
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
@@ -14,27 +14,27 @@ Parameters:
     Description: Name of the DynamoDB table
     Type: String
     Default: PacloudPackages
-  
+
 
 Resources:
   PackagesTable:
     Type: "AWS::DynamoDB::Table"
     Properties:
-      AttributeDefinitions: 
-        - 
+      AttributeDefinitions:
+        -
           AttributeName: "package"
           AttributeType: "S"
-        - 
+        -
           AttributeName: "useflagCompiled"
           AttributeType: "S"
-      KeySchema: 
-        - 
+      KeySchema:
+        -
           AttributeName: "package"
           KeyType: "HASH"
-        - 
+        -
           AttributeName: "useflagCompiled"
           KeyType: "RANGE"
-      ProvisionedThroughput: 
+      ProvisionedThroughput:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
       SSESpecification:
@@ -49,7 +49,7 @@ Outputs:
   TableName:
     Description: Name of the DynamoDB table
     Value: !Ref TableName
-    
+
   TableNameArn:
     Value: !GetAtt PackagesTable.Arn
     Description: Arn of the DynamoDB storing the packages informations

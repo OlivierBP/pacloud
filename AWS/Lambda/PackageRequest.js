@@ -2,7 +2,7 @@
 // PackageRequest Lambda function
 // https://github.com/OlivierBP/Pacloud
 // Created 2018-03-21 by BAL-PETRE Olivier
-// License MIT 
+// License MIT
 
 // Official documentation javascript SDK
 // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/
@@ -10,7 +10,7 @@
 'use strict';
 
 const AWS = require('aws-sdk');             // Load the AWS SDK for Node.js
-AWS.config.update({region: 'eu-west-1'});   // Set the region 
+AWS.config.update({region: 'eu-west-1'});   // Set the region
 
 const sqs = new AWS.SQS();
 const QueueName = 'QueueToCompile';         // Name of the queue
@@ -47,11 +47,11 @@ exports.lambda_handler = (event, context, callback) => {
                         Key: {
                             "package": {
                                 S: packageExpression
-                            }, 
+                            },
                             "useflagCompiled": {
                                 S: useflag
                             }
-                        }, 
+                        },
                     TableName: TableName
                 };
                 // Search the item in DynamoDB
@@ -81,20 +81,20 @@ exports.lambda_handler = (event, context, callback) => {
                             sqs.sendMessage(params_sendMessage, function(err, data_sendMessage) {
                                 if (err){
                                     console.log('Failed to send the message in the SQS queue:', err, err.stack);
-                                } 
+                                }
                                 else{
                                     var params_putItem = {
                                         Item: {
                                             "package": {
                                                 S: packageExpression
-                                            }, 
+                                            },
                                             "useflagCompiled": {
                                                 S: useflag
                                             },
                                             "compiling": {
                                                 S: String(Date.now())
                                             }
-                                        }, 
+                                        },
                                         TableName: TableName
                                        };
                                        // Put a line for this package in the DynamoDB table

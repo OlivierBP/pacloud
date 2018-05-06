@@ -2,13 +2,13 @@
 # Ec2
 # https://github.com/OlivierBP/Pacloud
 # Created 2018-03-18 by BAL-PETRE Olivier
-# License MIT 
+# License MIT
 
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
   Creation of all the Ec2 needed (Bastion server, spot fleet)
 
-Parameters:   
+Parameters:
   Ec2SpotFleetTargetCapacity:
     Description: Target capacity for the EC2 spot fleet
     Default: 1
@@ -47,7 +47,7 @@ Parameters:
     AllowedValues:
       - t2.micro
       - t2.nano
-  
+
   NatInstanceType:
     Description: Type instance for the NAT Instance
     Default: t2.nano
@@ -163,12 +163,12 @@ Resources:
           Value: pacloud-bastionserver-sg
 
   # Bastion server
-  BastionServer: 
+  BastionServer:
     Type: "AWS::EC2::Instance"
     Properties:
       InstanceType: !Ref BastionServerInstanceType
-      ImageId: 
-        Fn::FindInMap: 
+      ImageId:
+        Fn::FindInMap:
           - BastionInstanceRegionArch2AMI
           - !Ref "AWS::Region"
           - Fn::FindInMap:
@@ -180,7 +180,7 @@ Resources:
         - AssociatePublicIpAddress: true
           DeleteOnTermination: true
           DeviceIndex: 0
-          GroupSet: 
+          GroupSet:
             - !Ref SgPacloudBastionServer
           SubnetId: !Ref PublicSubnetPacloud1
       Tags:
@@ -204,8 +204,8 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       Policies:
-        - 
-          PolicyName: PacloudEc2SpotFleetRolePolicy 
+        -
+          PolicyName: PacloudEc2SpotFleetRolePolicy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -300,10 +300,10 @@ Resources:
                   - !ImportValue DynamoDbPackagesArn
 
 
-  PacloudEc2WorkerInstanceProfile: 
+  PacloudEc2WorkerInstanceProfile:
     Type: "AWS::IAM::InstanceProfile"
-    Properties: 
-      Roles: 
+    Properties:
+      Roles:
         - !Ref PacloudEc2WorkerRole
 
   # Security group for the spot instances: accept only ssh connections from the bastion server
@@ -334,7 +334,7 @@ Resources:
       Description: Create a spotfleet
       FunctionName: LambdaCustomResourceSpotFleet
       Handler: CustomResource_SpotFleet.lambda_handler
-      Role: !GetAtt 
+      Role: !GetAtt
         - LambdaCustomResourceSpotFleetRole
         - Arn
       Runtime: nodejs4.3
@@ -358,15 +358,15 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - 'sts:AssumeRole'
-      Policies: 
-        - 
+      Policies:
+        -
           PolicyName: CreateSpotFleet
-          PolicyDocument: 
+          PolicyDocument:
             Version: 2012-10-17
-            Statement: 
-              - 
+            Statement:
+              -
                 Effect: Allow
-                Action: 
+                Action:
                   - ec2:DeleteSpotDatafeedSubscription
                   - ec2:DescribeSpotFleetRequestHistory
                   - ec2:RequestSpotInstances
@@ -381,7 +381,7 @@ Resources:
                   - ec2:CreateSpotDatafeedSubscription
                   - ec2:DescribeSpotDatafeedSubscription
                 Resource: '*'
-        - 
+        -
           PolicyName: logLambdaCustomResource
           PolicyDocument:
             Version: 2012-10-17
@@ -392,7 +392,7 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource: arn:aws:logs:*:*:*
-        - 
+        -
           PolicyName: describeStack
           PolicyDocument:
             Version: 2012-10-17
@@ -412,7 +412,7 @@ Resources:
 
 
 
-  
+
 
 
 
@@ -440,14 +440,14 @@ Resources:
 
   # NAT Instance for AZ a
   # https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_NAT_Instance.html
-  NatInstance1: 
+  NatInstance1:
     Type: "AWS::EC2::Instance"
     Properties:
       SourceDestCheck: false
       AvailabilityZone: eu-west-1a
       InstanceType: !Ref NatInstanceType
-      ImageId: 
-        Fn::FindInMap: 
+      ImageId:
+        Fn::FindInMap:
           - NatInstanceRegionArch2AMI
           - !Ref "AWS::Region"
           - Fn::FindInMap:
@@ -458,7 +458,7 @@ Resources:
         - AssociatePublicIpAddress: true
           DeleteOnTermination: true
           DeviceIndex: 0
-          GroupSet: 
+          GroupSet:
             - !Ref SgPacloudNatInstance
           SubnetId: !Ref PublicSubnetPacloud1
       Tags:
@@ -468,14 +468,14 @@ Resources:
         Value: NatInstance1
 
   # NAT Instance for AZ b
-  NatInstance2: 
+  NatInstance2:
     Type: "AWS::EC2::Instance"
     Properties:
       SourceDestCheck: false
       AvailabilityZone: eu-west-1b
       InstanceType: !Ref NatInstanceType
-      ImageId: 
-        Fn::FindInMap: 
+      ImageId:
+        Fn::FindInMap:
           - NatInstanceRegionArch2AMI
           - !Ref "AWS::Region"
           - Fn::FindInMap:
@@ -486,7 +486,7 @@ Resources:
         - AssociatePublicIpAddress: true
           DeleteOnTermination: true
           DeviceIndex: 0
-          GroupSet: 
+          GroupSet:
             - !Ref SgPacloudNatInstance
           SubnetId: !Ref PublicSubnetPacloud2
       Tags:
@@ -496,14 +496,14 @@ Resources:
         Value: NatInstance2
 
   # NAT Instance for AZ b
-  NatInstance3: 
+  NatInstance3:
     Type: "AWS::EC2::Instance"
     Properties:
       SourceDestCheck: false
       AvailabilityZone: eu-west-1c
       InstanceType: !Ref NatInstanceType
-      ImageId: 
-        Fn::FindInMap: 
+      ImageId:
+        Fn::FindInMap:
           - NatInstanceRegionArch2AMI
           - !Ref "AWS::Region"
           - Fn::FindInMap:
@@ -514,7 +514,7 @@ Resources:
         - AssociatePublicIpAddress: true
           DeleteOnTermination: true
           DeviceIndex: 0
-          GroupSet: 
+          GroupSet:
             - !Ref SgPacloudNatInstance
           SubnetId: !Ref PublicSubnetPacloud3
       Tags:
@@ -523,7 +523,7 @@ Resources:
       - Key: Name
         Value: NatInstance3
 
-  
+
   # Default routes for the private subnets point to the NAT
   RouteTablePrivateSubnet1:
     Type: 'AWS::EC2::RouteTable'
@@ -580,7 +580,7 @@ Resources:
 
 
 
-   
+
 Outputs:
 
   BastionServer:
@@ -616,7 +616,7 @@ Outputs:
       Name: IamInstanceProfile
 
   ImageId:
-    Value: 
+    Value:
       Fn::FindInMap:
           - SpotInstanceRegionArch2AMI
           - !Ref AWS::Region
@@ -641,7 +641,7 @@ Outputs:
       Name: KeyName
 
   SecurityGroups:
-    Value: 
+    Value:
       Fn::GetAtt:
             - SgPacloudWorker
             - GroupId
@@ -652,7 +652,7 @@ Outputs:
   SubnetId:
     Value: !Join
         - ','
-        - - !Ref PrivateSubnetPacloudSpotFleet1 
+        - - !Ref PrivateSubnetPacloudSpotFleet1
           - !Ref PrivateSubnetPacloudSpotFleet2
           - !Ref PrivateSubnetPacloudSpotFleet3
     Description: To create the CustomResource SpotFleet

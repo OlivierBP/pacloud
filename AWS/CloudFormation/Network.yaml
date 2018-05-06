@@ -2,7 +2,7 @@
 # Network
 # https://github.com/OlivierBP/Pacloud
 # Created 2018-03-18 by BAL-PETRE Olivier
-# License MIT 
+# License MIT
 
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-

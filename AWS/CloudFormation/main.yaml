@@ -2,7 +2,7 @@
 # Main template
 # https://github.com/OlivierBP/Pacloud
 # Created 2018-03-18 by BAL-PETRE Olivier
-# License MIT 
+# License MIT
 
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
@@ -59,31 +59,31 @@ Parameters:
 
 
 
-Metadata: 
-  AWS::CloudFormation::Interface: 
-    ParameterGroups: 
-      - Label: 
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
           default: EC2 Spot Fleet Configuration
-        Parameters: 
+        Parameters:
           - SpotFleetEc2InstanceType
           - Ec2SpotFleetTargetCapacity
           - SpotFleetAllocationStrategy
           - KeyPairSpotFleet
-      - Label: 
+      - Label:
           default: Bastion server Configuration
-        Parameters: 
+        Parameters:
           - BastionServerInstanceType
           - KeyPairBastionServer
-    ParameterLabels: 
-      SpotFleetEc2InstanceType: 
+    ParameterLabels:
+      SpotFleetEc2InstanceType:
         default: Instance type
-      Ec2SpotFleetTargetCapacity: 
+      Ec2SpotFleetTargetCapacity:
         default: Number of instances
-      KeyPairSpotFleet: 
+      KeyPairSpotFleet:
         default: KeyPair
       BastionServerInstanceType:
         default: Instance type
-      KeyPairBastionServer: 
+      KeyPairBastionServer:
         default: KeyPair
       SpotFleetAllocationStrategy:
         default: Allocation strategy
@@ -134,9 +134,6 @@ Outputs:
   ApiRequestPackageUrl:
     Description: Url to request a package
     Value: !GetAtt Serverless.Outputs.ApiRequestPackageUrl
-  ApiSyncClientDbUrl:
-    Description: Url to sync the package database
-    Value: !GetAtt Serverless.Outputs.ApiSyncClientDbUrl
 
   BucketStorage:
     Value: !ImportValue PacloudBucketPackagesName

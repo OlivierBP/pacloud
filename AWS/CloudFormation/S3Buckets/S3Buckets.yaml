@@ -2,7 +2,7 @@
 # S3Bucket
 # https://github.com/OlivierBP/Pacloud
 # Created 2018-03-23 by BAL-PETRE Olivier
-# License MIT 
+# License MIT
 
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
@@ -10,7 +10,7 @@ Description: >-
 
 
 Parameters:
-  AlarmEmail: 
+  AlarmEmail:
     Description: Email address to notify if operational problems arise
     Default: nobody@amazon.com
     Type: String
@@ -28,11 +28,11 @@ Parameters:
 
 Resources:
   ################## SNS ##################
-  AlarmTopic: 
+  AlarmTopic:
     Type: "AWS::SNS::Topic"
-    Properties: 
-      Subscription: 
-        - 
+    Properties:
+      Subscription:
+        -
           Endpoint: !Ref "AlarmEmail"
           Protocol: "email"
 

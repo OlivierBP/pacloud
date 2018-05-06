@@ -2,7 +2,7 @@
 // CustomResource SpotFleet Lambda function
 // https://github.com/OlivierBP/Pacloud
 // Created 2018-03-27 by BAL-PETRE Olivier
-// License MIT 
+// License MIT
 
 // Best practices CustomResource in CloudFormation
 // https://aws.amazon.com/premiumsupport/knowledge-center/best-practices-custom-cf-lambda/
@@ -13,7 +13,7 @@
 exports.lambda_handler = function(event, context) {
   try {
     console.log(JSON.stringify(event, null, '  '));
-  
+
     // DELETE
     if (event.RequestType == 'Delete') {
       deleteSpotFleet(event, function(err, result) {
@@ -42,7 +42,7 @@ exports.lambda_handler = function(event, context) {
         var status = err ? 'FAILED' : 'SUCCESS';
         return sendResponse(event, context, status, result, err);
       });
-  
+
     }
 
     else{
@@ -52,7 +52,7 @@ exports.lambda_handler = function(event, context) {
   catch(err) {
     console.log("error");
     return sendResponse(event, context, "FAILED", event);
-  } 
+  }
 };
 
 
@@ -83,7 +83,7 @@ function deleteSpotFleet(event, callback) {
       var paramsCancel = {
         SpotFleetRequestIds: [
            spotFleetId
-        ], 
+        ],
         TerminateInstances: true
        };
 
@@ -91,11 +91,11 @@ function deleteSpotFleet(event, callback) {
       ec2.cancelSpotFleetRequests(paramsCancel, function(errCancel, dataCancel) {
         if (errCancel){
           console.log(errCancel, errCancel.stack);
-        } 
+        }
         else{
           console.log(dataCancel);
           return callback(null, dataCancel);
-        } 
+        }
       });
     }
   });
@@ -141,7 +141,7 @@ function createSpotFleet(properties, callback) {
     callback({message: "LaunchSpecifications[0].SubnetId not specified"});
   if (!properties.LaunchSpecifications[0].TagSpecifications)
     callback({message: "LaunchSpecifications[0].TagSpecifications not specified"});
-    
+
 
 
   var aws = require("aws-sdk");
@@ -151,7 +151,7 @@ function createSpotFleet(properties, callback) {
 
   // use the (param == true) to cast in boolean
   var params = {
-    SpotFleetRequestConfig: { 
+    SpotFleetRequestConfig: {
       IamFleetRole: properties.IamFleetRole,
       TargetCapacity: properties.TargetCapacity,
       AllocationStrategy: properties.AllocationStrategy,
@@ -210,12 +210,12 @@ function createSpotFleet(properties, callback) {
     }
   });
 }
-  
-  
-  
-  
 
-// Send response to the pre-signed S3 URL 
+
+
+
+
+// Send response to the pre-signed S3 URL
 function sendResponse(event, context, responseStatus, responseData, err) {
     console.log("Sending response " + responseStatus);
     var reason = err ? err.message : '';
@@ -252,16 +252,16 @@ function sendResponse(event, context, responseStatus, responseData, err) {
     var request = https.request(options, function(response) {
         console.log("STATUS: " + response.statusCode);
         console.log("HEADERS: " + JSON.stringify(response.headers));
-        // Tell AWS Lambda that the function execution is done  
+        // Tell AWS Lambda that the function execution is done
         context.done();
     });
 
     request.on("error", function(error) {
         console.log("sendResponse Error:" + error);
-        // Tell AWS Lambda that the function execution is done  
+        // Tell AWS Lambda that the function execution is done
         context.done();
     });
-  
+
     // write data to request body
     request.write(responseBody);
     request.end();

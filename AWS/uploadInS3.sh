@@ -2,7 +2,7 @@
 #
 # Project Pacloud https://github.com/OlivierBP/Pacloud
 # Created by BAL-PETRE Olivier
-# License MIT 
+# License MIT
 #
 # Script to push in a S3 bucket all the stuff needed for the Pacloud Project
 # Need to create a user with programmatic access and S3 policies
@@ -17,15 +17,13 @@ bucket=pacloud
 # Zip the lambda function and upload them
 if [ -d "Lambda" ]; then
     cd Lambda
-    
+
     echo "Zipping Lambda function..."
     zip PackageRequest.zip PackageRequest.js
-    zip SyncClientDb.zip SyncClientDb.js
     zip CustomResource_SpotFleet.zip CustomResource_SpotFleet.js
 
     echo "Uploading Lambda functions..."
     aws s3 cp PackageRequest.zip s3://$bucket/Lambda/
-    aws s3 cp SyncClientDb.zip s3://$bucket/Lambda/
     aws s3 cp CustomResource_SpotFleet.zip s3://$bucket/Lambda/
 
     echo "Lambda functions uploaded"
@@ -65,5 +63,5 @@ echo https://s3-eu-west-1.amazonaws.com/pacloud/CloudFormation/main.yaml | xclip
 echo "Done"
 
 
-# To retrieve from S3 via awscli: 
+# To retrieve from S3 via awscli:
 #aws s3 cp --recursive s3://pacloud/AMI/ /pacloud/AMI/
