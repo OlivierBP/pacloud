@@ -26,10 +26,9 @@ def _get_package_url(package_name, version):
 def download_package(package_name, version):
     response_json = _get_package_url(package_name, version)
     if(response_json["status"] == "SUCCESS"):
-        print(response_json["linkS3"])
         urllib.request.urlretrieve(response_json["linkS3"], '{}/{}/{}-{}.tbz2'.format(DB_DIR, package_name, package_name[package_name.find('/')+1:], version))
     elif(response_json["status"] == "WAIT"):
-        print('Compiling...')
+        print('Compiling...', end="", flush=True)
         time.sleep(10)
         download_package(package_name, version)
         #raise Exception("WAIT")
