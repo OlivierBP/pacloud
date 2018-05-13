@@ -72,6 +72,8 @@ Parameters:
     Type: String
   PublicSubnetPacloud3:
     Type: String
+  PublicSubnetPacloud4:
+    Type: String
   PrivateSubnetPacloudSpotFleet1:
     Type: String
   PrivateSubnetPacloudSpotFleet2:
@@ -182,7 +184,7 @@ Resources:
           DeviceIndex: 0
           GroupSet:
             - !Ref SgPacloudBastionServer
-          SubnetId: !Ref PublicSubnetPacloud1
+          SubnetId: !Ref PublicSubnetPacloud4
       Tags:
       - Key: Project
         Value: Pacloud

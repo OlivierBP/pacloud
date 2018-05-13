@@ -72,7 +72,7 @@ Resources:
     DependsOn:
       - VpcPacloudSpotFleet
 
-  # Public subnet for the bastion server and the NAT
+  # Public subnet for the NAT
   PublicSubnetPacloud1:
     Type: 'AWS::EC2::Subnet'
     Properties:
@@ -105,7 +105,7 @@ Resources:
       RouteTableId: !Ref RouteTablePublicSubnet1
       SubnetId: !Ref PublicSubnetPacloud1
 
-  # Public subnet for the bastion server and the NAT
+  # Public subnet for the NAT
   PublicSubnetPacloud2:
     Type: 'AWS::EC2::Subnet'
     Properties:
@@ -138,7 +138,7 @@ Resources:
       RouteTableId: !Ref RouteTablePublicSubnet2
       SubnetId: !Ref PublicSubnetPacloud2
 
-  # Public subnet for the bastion server and the NAT
+  # Public subnet for the NAT
   PublicSubnetPacloud3:
     Type: 'AWS::EC2::Subnet'
     Properties:
@@ -171,6 +171,38 @@ Resources:
       RouteTableId: !Ref RouteTablePublicSubnet3
       SubnetId: !Ref PublicSubnetPacloud3
 
+  # Public subnet for the bastion server
+  PublicSubnetPacloud4:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VpcPacloudSpotFleet
+      CidrBlock: 10.0.6.0/24
+      AvailabilityZone: eu-west-1c
+      Tags:
+        - Key: Name
+          Value: PublicSubnetPacloud4
+    DependsOn:
+      - VpcPacloudSpotFleet
+  # Create the default route to internet for the public subnet 4
+  RouteTablePublicSubnet4:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VpcPacloudSpotFleet
+      Tags:
+        - Key: Name
+          Value: RouteTablePublicSubnet4
+  RouteToIgPublicSubnet4:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePublicSubnet4
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref IgVpcPacloudSpotFleet
+    DependsOn: VPCGatewayAttachmentForIg
+  SubnetRouteTableAssociation4:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref RouteTablePublicSubnet4
+      SubnetId: !Ref PublicSubnetPacloud4
 
 
 Outputs:
@@ -182,6 +214,8 @@ Outputs:
     Value: !Ref PublicSubnetPacloud2
   PublicSubnetPacloud3:
     Value: !Ref PublicSubnetPacloud3
+  PublicSubnetPacloud4:
+    Value: !Ref PublicSubnetPacloud4
   PrivateSubnetPacloudSpotFleet1:
     Value: !Ref PrivateSubnetPacloudSpotFleet1
   PrivateSubnetPacloudSpotFleet2:

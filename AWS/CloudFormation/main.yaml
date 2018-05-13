@@ -119,6 +119,7 @@ Resources:
         PublicSubnetPacloud1: !GetAtt Network.Outputs.PublicSubnetPacloud1
         PublicSubnetPacloud2: !GetAtt Network.Outputs.PublicSubnetPacloud2
         PublicSubnetPacloud3: !GetAtt Network.Outputs.PublicSubnetPacloud3
+        PublicSubnetPacloud4: !GetAtt Network.Outputs.PublicSubnetPacloud4
         PrivateSubnetPacloudSpotFleet1: !GetAtt Network.Outputs.PrivateSubnetPacloudSpotFleet1
         PrivateSubnetPacloudSpotFleet2: !GetAtt Network.Outputs.PrivateSubnetPacloudSpotFleet2
         PrivateSubnetPacloudSpotFleet3: !GetAtt Network.Outputs.PrivateSubnetPacloudSpotFleet3
