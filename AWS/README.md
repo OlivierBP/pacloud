@@ -1,5 +1,53 @@
 # AWS Server part
 
+## Architecture
+
+### Request process
+
+![Process architecture](https://s3-eu-west-1.amazonaws.com/olivierbp/Process_architecture.png)
+
+This is the simplified process behind a user request. When a user request a package through the pacloud client, a HTTP request is sent to the API and forwarded to a Lambda function. The Lambda function will checks in a DynamoDB table if the package was already compiled with exactly the same parameters. If it was, a URL is returned to the client to download the binary from a S3 bucket and it will be installed. If it was not compiled yet, a message is put in a SQS queue.  
+A fleet of Spot instances checks regularly if there is something to compile in the queue and does it when appropriate. Once compiled, the binary is put in S3 and the meta-data are put in the DynamoDB table. Then, the SQS message is deleted.
+
+### Spot instance
+
+![Spot instance](https://s3-eu-west-1.amazonaws.com/olivierbp/AMI_architecture_worker.png)
+
+The compilation tasks required a lot of computing power. That's reason why we wanted to put it i the Cloud, but it can also be expensive. To keep a low cost, the Spot instance model was chosen. However, the Spot instances can be requested back and doesn't let us the time to finish the current compilation. To avoid to loose any work done, we can hibernate the instance and resume it when the instance will be available again. This feature is new and has [a lot of restrictions](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-interruptions.html). One of them is the need to have a hibernation agent running on the instance. This agent is only provided for Linux OSes Ubuntu and Amazon Linux. That's why the OS chosen is Ubuntu. To get Portage to compile the packages, we run periodically a [Gentoo stage 3 container](https://hub.docker.com/r/gentoo/stage3-amd64/). The container is destroyed after each compilation to always get the same compilation environment.
+
+### Compilation command
+
+```BASH
+env USE="$useflag" \            # Set the USE flags for only this command
+    emerge \
+    --onlydeps \                # Compile only the dependencies and not the package
+    --onlydeps-with-rdeps n \   # Compile just the build time dependencies and not the run time dependencies
+    =$package-$version \        # Package and version
+    && emerge --buildpkgonly =$package-$version     #  Build a binary for the package and don’t install the package. Use "&&" and not another instruction will not execute the second part if the first one fails
+```
+
+### Computing resources architecture
+
+![Computing resources architecture](https://s3-eu-west-1.amazonaws.com/olivierbp/Computing_resources_architecture.png)
+
+NAT instances security group (inbound rules):
+
+| Protocol type | Port number |     Source IP     |
+| ------------- | ----------- | ----------------- |
+|     TCP       |     80      | spot-instances-sg |
+|     TCP       |     80      | spot-instances-sg |
+
+Spot instances security group (inbound rules):
+
+| Protocol type | Port number |     Source IP     |
+| ------------- | ----------- | ----------------- |
+|     TCP       |     22      |     bastion-sg    |
+
+As the schema above shows, all the Spot instances are in private subnets and use a NAT instance to get an Internet access. A bastion server was added to get a SSH access to the Spot Instances if needed. The one-line SSH command can be found [here](#Connect-to-a-Spot-instance-through-the-bastion-server-with-local-keys). Notice that the two keys are kept local and not any need to be store in the Bastion.  
+
+The CloudFormation stacks create the architecture in three AZ (availability zones) to ensure a high availability. The Spot Fleet can put the Spot instances in a way to maximise the dispersion in the AZ and maximise the availability or in a way the optimise the price of the instances. This parameter is chosen when launching the CloudFormation stack "main.yaml".
+
+
 ## Deploy the Server
 
 ### Folder architecture
@@ -24,16 +72,11 @@ Pacloud/AWS/
 │   ├── Serverless.yaml  
 │   └── SpotFleet  
 │       └── SpotFleet.yaml  
-├── Diagrams  
-│   ├── Architecture.xml  
-│   └── Process_architecture.xml  
+├── Diagrams ***(to open with [draw.io](draw.io))*** 
+│   └── ... 
 ├── Lambda  
 │   ├── CustomResource_SpotFleet.js  
-│   ├── CustomResource_SpotFleet.zip  
 │   ├── PackageRequest.js  
-│   ├── PackageRequest.zip  
-│   ├── SyncClientDb.js  
-│   └── SyncClientDb.zip  
 ├── README.md  
 ├── scpAMI.sh  
 └── uploadInS3.sh  
@@ -63,12 +106,10 @@ In a EC2 with an Ubuntu AMI (tested with Ubuntu 16.04 LTS HVM):
 
 ### Create the server architecture with CloudFormation
 
-Need to change the AMI in the EC2.yaml template in the "Mappings" part:
+Need to change the AMI in the EC2.yaml template in the "Mappings" part to put the one you created:
 >SpotInstanceRegionArch2AMI:  
 >   eu-west-1:  
 >      '64': **ami-05461d7c**  
-
-
 
 
 1. Upload the templates in S3
@@ -77,20 +118,20 @@ Need to change the AMI in the EC2.yaml template in the "Mappings" part:
     cd Pacloud/AWS/
     ./uploadInS3.sh
     ```
-1. Create S3Buckets.yaml stack
-1. Create DynamoDB.yaml stack
-2. Create main.yaml stack
+2. Create S3Buckets.yaml stack
+3. Create DynamoDB.yaml stack
+4. Create main.yaml stack
     * Automatically deploy nested stack Serverless.yaml
     * Automatically deploy nested stack network.yaml
     * Automatically deploy nested stack Ec2.yaml
-3. Create stack SpotFleet.yaml
+5. Create stack SpotFleet.yaml
 
 
-## Other
+## Utilities
 
-### Connection to a spot instance through the bastion server with local keys
+### Connect to a Spot instance through the bastion server with local keys
 
 ```SHELL
-ssh -i ~/Bureau/KeyPair_Server1.pem -o ProxyCommand='ssh -i ~/Bureau/KeyPair_Server1.pem -W %h:%p ubuntu@34.244.176.197' ubuntu@10.0.0.38
+ssh -i ~/Bureau/KeyPair1.pem -o ProxyCommand='ssh -i ~/Bureau/KeyPair2.pem -W %h:%p ubuntu@34.244.176.197' ubuntu@10.0.0.38
 ```
 
