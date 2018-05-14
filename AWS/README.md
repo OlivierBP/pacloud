@@ -74,7 +74,7 @@ Pacloud/AWS/
 │   ├── Serverless.yaml  
 │   └── SpotFleet  
 │       └── SpotFleet.yaml  
-├── Diagrams ***(to open with [draw.io](https://draw.io))***  
+├── Diagrams *(to open with [draw.io](https://draw.io))*  
 │   └── ...  
 ├── Lambda  
 │   ├── CustomResource_SpotFleet.js  
