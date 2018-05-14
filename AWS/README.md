@@ -4,7 +4,7 @@
 
 ### Request process
 
-![Process architecture](https://s3-eu-west-1.amazonaws.com/olivierbp/Process_architecture.png)
+![Process architecture](https://s3-eu-west-1.amazonaws.com/olivierbp/Process_architecture_small.png)
 
 This is the simplified process behind a user request. When a user request a package through the pacloud client, a HTTP request is sent to the API and forwarded to a Lambda function. The Lambda function will check in a DynamoDB table if the package was already compiled with exactly the same parameters. If it was, a URL is returned to the client to download the binary from a S3 bucket and it will be installed. If it was not compiled yet, a message is put in a SQS queue.  
 A fleet of Spot instances checks regularly if there is something to compile in the queue and does it when appropriate. Once compiled, the binary is put in S3 and the meta-data are put in the DynamoDB table. Then, the SQS message is deleted.
