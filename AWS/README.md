@@ -37,7 +37,7 @@ NAT instances security group (inbound rules):
 | Protocol type | Port number |     Source IP     |
 | ------------- | ----------- | ----------------- |
 |     TCP       |     80      | spot-instances-sg |
-|     TCP       |     80      | spot-instances-sg |
+|     TCP       |     443     | spot-instances-sg |
 
 Spot instances security group (inbound rules):
 
