@@ -26,6 +26,7 @@ Parameters:
       - c5.large
       - m4.large
       - m5.large
+      - c5.9xlarge
     ConstraintDescription: Must be a valid instance type that can hibernate
 
   KeyPairSpotFleet:

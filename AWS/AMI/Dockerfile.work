@@ -1,6 +1,6 @@
 # Project Pacloud https://github.com/OlivierBP/Pacloud
 # Created by BAL-PETRE Olivier
-# License MIT 
+# License MIT
 #
 # This Dockerfile allow to modify the container building it without have to rebuild all the container to can test
 # It's a modified copy of the Dockerfile
@@ -20,9 +20,12 @@ RUN /pacloud/AMI/scripts/setMakeConf.sh
 #app-misc/jq \
 #dev-python/pip
 
+# Update IMPORTANT in the Dockerfile.WORK because if not, the container is never updated
+RUN emerge --sync
+
 # Install aws cli with pip
 #RUN pip install awscli --user \
-#&& ln -s /root/.local/bin/aws /bin/aws 
+#&& ln -s /root/.local/bin/aws /bin/aws
 
 # Configure awscli
 #RUN aws configure set region eu-west-1

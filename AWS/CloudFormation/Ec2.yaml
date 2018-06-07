@@ -25,6 +25,7 @@ Parameters:
       - c5.large
       - m4.large
       - m5.large
+      - c5.9xlarge
     ConstraintDescription: Must be a valid instance type that can hibernate
 
   KeyPairSpotFleet:
@@ -113,9 +114,13 @@ Mappings:
       Arch: '64'
     m5.large:
       Arch: '64'
+    c5.9xlarge:
+      Arch: '64'
   SpotInstanceRegionArch2AMI:
     eu-west-1:
-      '64': ami-64ffda1d
+      '64': ami-020a0a7b
+      # '64': ami-b97575c0
+      # '64': ami-64ffda1d
       # '64': ami-9ce4bee5
       # '64': ami-49792330
       # '64': ami-f8b7ec81
