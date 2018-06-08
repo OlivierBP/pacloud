@@ -22,10 +22,10 @@ Parameters:
     Default: c3.large
     AllowedValues:
       - c3.large
-      - c4.large
       - c5.large
-      - m4.large
-      - m5.large
+      - c5.xlarge
+      - c5.2xlarge
+      - c5.4xlarge
       - c5.9xlarge
     ConstraintDescription: Must be a valid instance type that can hibernate
 

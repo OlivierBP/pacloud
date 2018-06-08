@@ -21,10 +21,10 @@ Parameters:
     Default: c3.large
     AllowedValues:
       - c3.large
-      - c4.large
       - c5.large
-      - m4.large
-      - m5.large
+      - c5.xlarge
+      - c5.2xlarge
+      - c5.4xlarge
       - c5.9xlarge
     ConstraintDescription: Must be a valid instance type that can hibernate
 
@@ -106,13 +106,13 @@ Mappings:
   SpotInstanceType2Arch:
     c3.large:
       Arch: '64'
-    c4.large:
-      Arch: '64'
     c5.large:
       Arch: '64'
-    m4.large:
+    c5.xlarge:
       Arch: '64'
-    m5.large:
+    c5.2xlarge:
+      Arch: '64'
+    c5.4xlarge:
       Arch: '64'
     c5.9xlarge:
       Arch: '64'

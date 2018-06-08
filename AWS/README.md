@@ -4,14 +4,14 @@
 
 ### Request process
 
-![Process architecture](https://s3-eu-west-1.amazonaws.com/olivierbp/Process_architecture_small.png)
+![Process architecture](https://s3-eu-west-1.amazonaws.com/olivierbp/github-assets/pacloud/Process_architecture_small.png)
 
 This is the simplified process behind a user request. When a user request a package through the pacloud client, a HTTP request is sent to the API and forwarded to a Lambda function. The Lambda function will check in a DynamoDB table if the package was already compiled with exactly the same parameters. If it was, a URL is returned to the client to download the binary from a S3 bucket and it will be installed. If it was not compiled yet, a message is put in a SQS queue.  
 A fleet of Spot instances checks regularly if there is something to compile in the queue and does it when appropriate. Once compiled, the binary is put in S3 and the meta-data are put in the DynamoDB table. Then, the SQS message is deleted.
 
 ### Spot instance
 
-![Spot instance](https://s3-eu-west-1.amazonaws.com/olivierbp/AMI_architecture_worker.png)
+![Spot instance](https://s3-eu-west-1.amazonaws.com/olivierbp/github-assets/pacloud/AMI_architecture_worker.png)
 
 The compilation tasks required a lot of computing power. That's the reason why we wanted to put it in the Cloud, but it can also be expensive. To keep a low cost, the Spot instance model was chosen. However, the Spot instances can be requested back and doesn't let us the time to finish the current compilation. To avoid to loose any work done, we can hibernate the instance and resume it later when the instance is available again. This feature is new and has [a lot of restrictions](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-interruptions.html). One of them is the need to have a hibernation agent running on the instance. This agent is only provided for Linux OSes Ubuntu and Amazon Linux. That's why the OS chosen is Ubuntu. To get Portage to compile the packages, we run periodically a [Gentoo stage 3 container](https://hub.docker.com/r/gentoo/stage3-amd64/). The container is destroyed after each compilation to always get the same compilation environment.
 
@@ -30,7 +30,7 @@ env USE="$useflag" \            # Set the USE flags for only this command
 
 ### Computing resources architecture
 
-![Computing resources architecture](https://s3-eu-west-1.amazonaws.com/olivierbp/Computing_resources_architecture.png)
+![Computing resources architecture](https://s3-eu-west-1.amazonaws.com/olivierbp/github-assets/pacloud/Computing_resources_architecture.png)
 
 NAT instances security group (inbound rules):
 
