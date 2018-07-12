@@ -119,15 +119,6 @@ Mappings:
   SpotInstanceRegionArch2AMI:
     eu-west-1:
       '64': ami-020a0a7b
-      # '64': ami-b97575c0
-      # '64': ami-64ffda1d
-      # '64': ami-9ce4bee5
-      # '64': ami-49792330
-      # '64': ami-f8b7ec81
-      # '64': ami-49b0eb30
-      # '64': ami-05461d7c
-      # '64': ami-44dc843d
-      # '64': ami-19104d60
 
 
   BastionInstanceType2Arch:
@@ -137,7 +128,8 @@ Mappings:
       Arch: '64'
   BastionInstanceRegionArch2AMI:
     eu-west-1:
-      '64': ami-e795dd9e
+      '64': ami-2a7d75c0
+      # Public Ubuntu AMI
 
   NatInstanceType2Arch:
     t2.nano:
