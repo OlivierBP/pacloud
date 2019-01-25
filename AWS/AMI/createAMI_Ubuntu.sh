@@ -2,7 +2,7 @@
 #
 # Project Pacloud https://github.com/OlivierBP/Pacloud
 # Created by BAL-PETRE Olivier
-# License MIT 
+# License MIT
 #
 # Create the AMI for the Pacloud's workers from a Ubuntu AMI (tested with Ubuntu 16.04 LTS HVM)
 
@@ -20,7 +20,7 @@ tmux
 # Install the packages needed to do the job
 apt-get --assume-yes install \
 docker.io \
-hibagent 
+hibagent
 
 # Enable hibagent service
 /usr/bin/enable-ec2-spot-hibernation

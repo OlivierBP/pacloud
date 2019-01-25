@@ -2,7 +2,7 @@
 #
 # Project Pacloud https://github.com/OlivierBP/Pacloud
 # Created by BAL-PETRE Olivier
-# License MIT 
+# License MIT
 #
 # This script get a compilation request from the SQS queue, work on, upload the result in S3 and delete the task from the queue
 
@@ -23,7 +23,7 @@ queueUrl=$(aws sqs get-queue-url --queue-name $queueName | jq -r '.QueueUrl')
 # Get a message from the queue
 message=$(aws sqs receive-message --queue-url $queueUrl)
 echo $message | jq -r ''
-    
+
 # If there is a message (message is null if not any was received)
 if [ -n "$message" ]; then
 
@@ -43,12 +43,12 @@ if [ -n "$message" ]; then
     category=$(echo $body | jq -r '.category')                      # app-misc
     nameShort=$(echo $body | jq -r '.nameShort')                    # ranger
     version=$(echo $body | jq -r '.version')                        # 1.8.1
-    useflag=$(echo $body | jq -r '.useflag')                        # 
+    useflag=$(echo $body | jq -r '.useflag')                        #
 
     # Before compile, set the make.conf
     # TODO: Needed ??
     /pacloud/AMI/scripts/setMakeConf.sh
-    
+
     errorMessage=""
     # Compilation in a background process and redirect all the errors in $errorMessage
     errorMessage=$(/pacloud/AMI/scripts/emergeCommand.sh $nameLong $version $useflag 2>&1 >/dev/null &)
@@ -83,7 +83,7 @@ if [ -n "$message" ]; then
             } \
         }"
 
-    # If $errorMessage is empty 
+    # If $errorMessage is empty
     if [[ -z $errorMessage ]]; then
         dbupdate_expressionAttributeValues=" \
             { \
@@ -103,13 +103,13 @@ if [ -n "$message" ]; then
             }"
         dbupdate_updateExpression="SET errorMessage = :em REMOVE compiling, linkS3"
     fi
-    
+
     aws dynamodb update-item \
         --table-name $dynamoDbTableName\
         --key "$dbupdate_key" \
         --update-expression "$dbupdate_updateExpression" \
         --expression-attribute-values "$dbupdate_expressionAttributeValues"
-    
+
 
     echo "Entry updated in the DynamoDb table"
 
@@ -120,4 +120,4 @@ if [ -n "$message" ]; then
 else
     echo "Not any message for now..."
 fi
-    
+

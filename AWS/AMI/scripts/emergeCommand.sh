@@ -2,7 +2,7 @@
 #
 # Project Pacloud https://github.com/OlivierBP/Pacloud
 # Created by BAL-PETRE Olivier
-# License MIT 
+# License MIT
 #
 # This script contains the command to merge the requested package
 

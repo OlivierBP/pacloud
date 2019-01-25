@@ -1,6 +1,6 @@
 # Project Pacloud https://github.com/OlivierBP/Pacloud
 # Created by BAL-PETRE Olivier
-# License MIT 
+# License MIT
 #
 # This Dockerfile create the container for worker for the project Pacloud
 
@@ -21,7 +21,7 @@ dev-python/pip
 
 # Install aws cli with pip
 RUN pip install awscli --user \
-&& ln -s /root/.local/bin/aws /bin/aws 
+&& ln -s /root/.local/bin/aws /bin/aws
 
 # Configure awscli
 RUN aws configure set region eu-west-1
@@ -38,6 +38,6 @@ ENTRYPOINT ["/pacloud/AMI/scripts/compilePackage.sh"]
 
 # To commit and push
 # docker login --username olivierbp
-# docker commit -a "olivierbp" -m "message" containerId olivierbp/pacloud:tags
-# docker push olivierbp/pacloud:tags
+# docker commit -a "olivierbp" -m "<message>" <containerId> olivierbp/pacloud:latest
+# docker push olivierbp/pacloud:latest
 

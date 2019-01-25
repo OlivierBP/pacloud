@@ -2,7 +2,7 @@
 #
 # Project Pacloud https://github.com/OlivierBP/Pacloud
 # Created by BAL-PETRE Olivier
-# License MIT 
+# License MIT
 #
 # Script started regularly by a cron job
 # Check if something is compiling and if there is a compilation request. Start a compilation if needed
@@ -20,7 +20,7 @@ if [ ! -d "/pacloud/compiling.lock" ]; then
     } || { # catch
         echo "compilation script failed"
     }
-    
+
     # Release the lock
     rm -r /pacloud/compiling.lock
 fi
