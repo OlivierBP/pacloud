@@ -9,6 +9,7 @@
 # Configure the credentials on the local computer with "aws configure"
 
 
+set -e
 
 # S3 Bucket
 bucket=pacloud
