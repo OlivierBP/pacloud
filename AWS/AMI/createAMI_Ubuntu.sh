@@ -33,6 +33,8 @@ chown ubuntu:users /pacloud
 
 # DOCKER
 docker pull olivierbp/pacloud
+# !!!
+# Another docker pull is made in the EC2 userdata to get the latest image
 
 # CRONTAB
 # Enable the service cron
