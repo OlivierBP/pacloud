@@ -141,7 +141,10 @@ function createSpotFleet(properties, callback) {
     callback({message: "LaunchSpecifications[0].SubnetId not specified"});
   if (!properties.LaunchSpecifications[0].TagSpecifications)
     callback({message: "LaunchSpecifications[0].TagSpecifications not specified"});
-
+  if (!properties.LaunchSpecifications[0].UserData)
+    callback({message: "LaunchSpecifications[0].UserData not specified"});
+  if (!properties.LaunchSpecifications[0].EbsSize)
+    callback({message: "LaunchSpecifications[0].EbsSize not specified"});
 
 
   var aws = require("aws-sdk");
@@ -159,6 +162,14 @@ function createSpotFleet(properties, callback) {
       InstanceInterruptionBehavior: properties.LaunchSpecifications[0].InstanceInterruptionBehavior,
       LaunchSpecifications: [
         {
+          DeviceName: '/dev/sda1',
+          BlockDeviceMappings: [
+          {
+            Ebs: {
+              VolumeSize: properties.LaunchSpecifications[0].EbsSize,
+            },
+          },
+        ],
           EbsOptimized: (properties.LaunchSpecifications[0].EbsOptimized == 'true'),
           IamInstanceProfile: {
             Arn: properties.LaunchSpecifications[0].IamInstanceProfile.Arn,

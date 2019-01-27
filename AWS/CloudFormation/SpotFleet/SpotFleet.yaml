@@ -27,6 +27,7 @@ Resources:
 
       LaunchSpecifications:
       - EbsOptimized: false
+        EbsSize: 30
         InstanceInterruptionBehavior: hibernate
         IamInstanceProfile:
           Arn: !ImportValue IamInstanceProfile
