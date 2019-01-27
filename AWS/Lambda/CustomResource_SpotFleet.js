@@ -162,9 +162,9 @@ function createSpotFleet(properties, callback) {
       InstanceInterruptionBehavior: properties.LaunchSpecifications[0].InstanceInterruptionBehavior,
       LaunchSpecifications: [
         {
-          DeviceName: '/dev/sda1',
           BlockDeviceMappings: [
           {
+            DeviceName: '/dev/sda1',
             Ebs: {
               VolumeSize: properties.LaunchSpecifications[0].EbsSize,
             },
