@@ -118,7 +118,7 @@ Mappings:
       Arch: '64'
   SpotInstanceRegionArch2AMI:
     eu-west-1:
-      '64': ami-020a0a7b
+      '64': ami-02d872af7e45b0f51
 
 
   BastionInstanceType2Arch:
